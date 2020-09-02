@@ -119,8 +119,14 @@ async function migrate() {
 
     const {proceed, gasPriceGwei} = await prompt(Math.trunc(gasPriceSuggestGwei));
 
-    console.log(proceed, gasPriceGwei);
+    if (!proceed) {
+        console.log('Aborting..');
+        return;
+    }
+
+
     // TODO send txes - apply gas price, from address, gas limit,
+    console.log('TODO - send transactions here.... coming soon :(')
 }
 
 async function _populateStakersAndIdentityMigration() {
