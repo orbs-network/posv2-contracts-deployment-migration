@@ -190,6 +190,7 @@ async function _batchImportDelegationTransactions(sorted, batchSize, migrationOw
         batchedArr[bi].to.push(delegationItem.to);
         batchedArr[bi].from.push(delegationItem.from);
         batchedArr[bi].len++;
+        return batchedArr;
     }, []);
 
     console.log(`splitting to batches of ${batchSize}`);
