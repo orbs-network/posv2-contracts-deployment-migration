@@ -1,4 +1,6 @@
-pragma solidity 0.5.17;
+// SPDX-License-Identifier: UNLICENSED
+
+pragma solidity 0.6.12;
 
 contract GuardiansMigrationV1V2 {
     event GuardianAddressMigrationRecorded(address indexed oldGuardianAddress, address indexed newGuardianAddress);
