@@ -75,7 +75,7 @@ async function loadMigrationSnapshot() {
 }
 
 async function migrate() {
-    const migrationManager = await callWithRetry(cntr.contractRegistry.methods.getManager("migrationManager")());
+    const migrationManager = await callWithRetry(cntr.contractRegistry.methods.getManager("migrationManager"));
     if (!(await web3.eth.getAccounts()).includes(migrationManager)) {
         throw "Migration owner is not a known account. Check mnemonic and retry...";
     }

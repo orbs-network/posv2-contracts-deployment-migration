@@ -54,23 +54,29 @@ Place a mnemonic in a file called `.secret`. For testing it can be any mnemonic.
 
 run ganache. this forks off from Ethereum state, you may need to replace the infura api key in package.json to a valid api key:
 ```shell script
-npm run start-ganache
+npm run test
 ```
 
-Deploy PoS contracts, pointing at product 
+## Dev
+
+Place a mnemonic in a file called `.secret`. For dev it can be any mnemonic.
+
+run ganache. this forks off from Ethereum state, you may need to replace the infura api key in package.json to a valid api key:
+```shell script
+npm run start-gahance
+```
+Notice, that as soon as you start ganache the forked block is hardened. If you are not using an
+archive node at some point (a few minutes) your node no longer be able to serve state queries
+and it will be required to restart ganache. use `restart-ganache` in this case. 
+
+Deploy PoS contracts. You may run this script only once if you are developing the migration logic 
 ```shell script
 npm run deploy-local
 ```
 
 This will create a new file called `driverOptions.json` with the address of the newly deployed contractRegistry contract on ganache.
 
-Run migration locally to create `migrationSnapshot.json`
-```shell script
-npm run migrate-local
-```
-
-stop the execution and review the file manually. 
-To resume migration and test the resulting state on ganache run the script again, this time accepting the snapshot and proceeding with migration:
+Run migration 
 ```shell script
 npm run migrate-local
 ```

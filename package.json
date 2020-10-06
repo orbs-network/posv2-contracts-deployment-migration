@@ -4,11 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "npm run stop-ganache 2> /dev/null ; npm run start-ganache && sleep 5 && npm run deploy-local && npm run migrate-local",
-    "deploy-local": "export GAS_LIMIT=6721974 && export ETHEREUM_MNEMONIC=\"$(cat .secret)\" &&  export ETHEREUM_URL=\"http://localhost:8545\" && truffle exec scripts/deployContracts.js --network development",
+    "pretest": "npm run stop-ganache 2> /dev/null ; npm run start-ganache && sleep 7",
+    "test": "npm run deploy-local && npm run migrate-local",
+    "deploy-local": "export GAS_LIMIT=6721974 && export ETHEREUM_MNEMONIC=\"$(cat .secret)\" && truffle exec scripts/deployContracts.js --network development",
     "migrate-local": "truffle exec scripts/migrate.js  --network development",
     "migrate-mainnet": "truffle exec scripts/migrate.js --netowrk mainnet",
-    "start-ganache": "ganache-cli -v -m \"$(cat .secret)\" --fork https://mainnet.infura.io/v3/48fb0d9baafd4e28aa34f95d75f6d4ce & echo $! > .ganache_pid",
+    "start-ganache": "ganache-cli -v -m \"$(cat .secret)\" -p 7545 --fork https://mainnet.infura.io/v3/48fb0d9baafd4e28aa34f95d75f6d4ce & echo $! > .ganache_pid",
     "stop-ganache": "kill $(cat .ganache_pid) ; rm .ganache_pid"
   },
   "author": "",
