@@ -1,3 +1,5 @@
 node_modules
 .secret
+.ganache_pid
+driverOptions.json
 migrationSnapshot.json

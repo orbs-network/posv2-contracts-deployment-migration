@@ -32,7 +32,7 @@ npm install
 ```
 
 create a file called `.secret` with a mnemonic or secret suitable for signing 
-transactions `migrationOwner` in Orbs V2 `Delegations` contract.
+transactions as `migrationManager` in Orbs V2 `Delegations` contract.
 
 execute:
 ```shell script
@@ -47,3 +47,30 @@ After the first execution of the script a file will be saved with the delegation
 On each subsequent activation you will be prompted to choose between loading the existing snapshotfile or interrogating the network once more for V1 delegations. When choosing to override the snapshot file will be overridden with the newly retrieved delegation snapshot.
 
 Between activation of the migration script you may edit the snapshot file to remove or add delegations manually.
+
+## Testing
+
+Place a mnemonic in a file called `.secret`. For testing it can be any mnemonic.
+
+run ganache. this forks off from Ethereum state, you may need to replace the infura api key in package.json to a valid api key:
+```shell script
+npm run start-ganache
+```
+
+Deploy PoS contracts, pointing at product 
+```shell script
+npm run deploy-local
+```
+
+This will create a new file called `driverOptions.json` with the address of the newly deployed contractRegistry contract on ganache.
+
+Run migration locally to create `migrationSnapshot.json`
+```shell script
+npm run migrate-local
+```
+
+stop the execution and review the file manually. 
+To resume migration and test the resulting state on ganache run the script again, this time accepting the snapshot and proceeding with migration:
+```shell script
+npm run migrate-local
+```

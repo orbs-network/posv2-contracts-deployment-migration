@@ -22,7 +22,9 @@ const HDWalletProvider = require('@truffle/hdwallet-provider');
 // const infuraKey = "fj4jll3k.....";
 //
 const fs = require('fs');
-const mnemonic = fs.readFileSync(".secret").toString().trim();
+const defaultMnemonic = process.env.ETHEREUM_MNEMONIC || "vanish junk genuine web seminar cook absurd royal ability series taste method identify elevator liquid";
+const mnemonic = fs.existsSync(".secret") ? fs.readFileSync(".secret").toString().trim() : defaultMnemonic;
+const ethereumMainnetUrl = process.env.ETHEREUM_URL || `https://mainnet.infura.io/v3/48fb0d9baafd4e28aa34f95d75f6d4ce`;
 
 module.exports = {
   /**
@@ -67,7 +69,7 @@ module.exports = {
     // skipDryRun: true     // Skip dry run before migrations? (default: false for public nets )
     // },
     mainnet: {
-    provider: () => new HDWalletProvider(mnemonic, `https://mainnet.infura.io/v3/48fb0d9baafd4e28aa34f95d75f6d4ce`),
+    provider: () => new HDWalletProvider(mnemonic, `${ethereumMainnetUrl}`),
     network_id: 1,       // Ropsten's id
     confirmations: 2,    // # of confs to wait between deployments. (default: 0)
     timeoutBlocks: 200,  // # of blocks before a deployment times out  (minimum/default: 50)
