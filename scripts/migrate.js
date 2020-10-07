@@ -77,9 +77,81 @@ async function migrate() {
         return;
     }
 
+    console.log('\n\n\n');
+    console.log('------------------------------------------------------------------------');
+    console.log('------------------------------------------------------------------------');
+    console.log('------------------------------------------------------------------------');
+    console.log('--------------------                                --------------------');
+    console.log('--------------------      SENDING  TRANSACTIONS     --------------------');
+    console.log('--------------------                                --------------------');
+    console.log('------------------------------------------------------------------------');
+    console.log('------------------------------------------------------------------------');
+    console.log('------------------------------------------------------------------------');
+    console.log('\n\n\n');
 
-    // TODO send txes - apply gas price, from address, gas limit,
-    console.log('TODO - send transactions here.... coming soon :(')
+    // import delegation transactions
+    let txCount = 1;
+    const promises = [];
+    const txOpts = {
+        gas: Math.min(6000000, 2 * maxGas),
+        gasPrice: gasPriceGwei,
+        from: migrationManager
+    };
+    for (const b of batched) {
+        console.log(`Delegations.importDelegations(${JSON.stringify(b.from)}, ${JSON.stringify(b.to)})!`);
+        const doTx = (i) => {
+            promises.push(new Promise((resolve, reject) => {
+                cnts.delegations.methods.importDelegations(b.from, b.to, false).send(txOpts)
+                    .on('transactionHash', function(hash){
+                        console.log(`[${i}]`, 'hash', hash);
+                    })
+                    .on('confirmation', function(confirmationNumber, receipt){
+                        console.log(`[${i}]`, 'confirmation', receipt.transactionHash, confirmationNumber);
+                        if (confirmationNumber > 6) {
+                            resolve(receipt);
+                        }
+                    })
+                    .on('receipt', function(receipt){
+                        console.log(`[${i}]`, 'receipt', receipt.transactionHash, receipt.gasUsed, receipt.blockNumber);
+                    })
+                    .on('error', function(error, receipt) { // If the transaction was rejected by the network with a receipt, the second parameter will be the receipt.
+                        console.log(`[${i}]`, 'error', receipt.transactionHash);
+                        reject(receipt);
+                    });
+                }));
+        };
+        doTx(txCount++);
+
+    }
+
+    // refresh stake transactions
+    for (const r of refreshStake) {
+        console.log(`Delegations.refreshStake(${r.for})!`);
+        const doTx = (i) => {
+            promises.push(new Promise((resolve, reject) => {
+                cnts.delegations.methods.refreshStake(r.for).send(txOpts)
+                    .on('transactionHash', function (hash) {
+                        console.log(`[${i}]`, 'hash', hash);
+                    })
+                    .on('confirmation', function (confirmationNumber, receipt) {
+                        console.log(`[${i}]`, 'confirmation', receipt.transactionHash, confirmationNumber);
+                        if (confirmationNumber > 6) {
+                            resolve(receipt);
+                        }
+                    })
+                    .on('receipt', function (receipt) {
+                        console.log(`[${i}]`, 'receipt', receipt.transactionHash, receipt.gasUsed, receipt.blockNumber);
+                    })
+                    .on('error', function (error, receipt) { // If the transaction was rejected by the network with a receipt, the second parameter will be the receipt.
+                        console.log(`[${i}]`, 'error', receipt.transactionHash)
+                        reject(receipt);
+                    });
+            }));
+        };
+        doTx(txCount++);
+    }
+    await Promise.all(promises);
+
 }
 
 async function determineMigrationManager() {
