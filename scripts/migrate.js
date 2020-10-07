@@ -77,6 +77,7 @@ async function migrate() {
         return;
     }
 
+
     // TODO send txes - apply gas price, from address, gas limit,
     console.log('TODO - send transactions here.... coming soon :(')
 }
@@ -281,18 +282,12 @@ async function _splitAndVerifyGasLimits(sorted, maxBatchSize, migrationOwner) {
             const gas = await cnts.delegations.methods.importDelegations(b.from, b.to, false).estimateGas({from: migrationOwner});
 
             if (gas > gasLimitTx) {
-                if (maxBatchSize > 1) {
-                    return await _splitAndVerifyGasLimits(sorted, maxBatchSize - 1, migrationOwner);
-                }
-                console.log(`gas cost: ${gas} for: importDelegations(${JSON.stringify(b.from)}, ${JSON.stringify(b.to)})`);
-                throw "smallest batch exceeds gas limit"
+                console.log(`gas cost: ${gas} for importDelegations(${JSON.stringify(b.from)}, ${JSON.stringify(b.to)})`);
+                throw "transaction exceeds gas limit"
             }
             console.log(`batch ${i} size ${b.len} delegates to ${b.to}. gas estimate passed`)
         } catch (e) {
-            if (e.code && e.code === -32000 && maxBatchSize > 1) {
-                return await _splitAndVerifyGasLimits(sorted, maxBatchSize - 1, migrationOwner);
-            }
-            console.log(`smallest batch failed: ${JSON.stringify(e)}`);
+            console.log(`gas estimation failed: ${JSON.stringify(e)}`);
             console.log(`failed to estimate gas for: importDelegations(${JSON.stringify(b.from)}, ${JSON.stringify(b.to)})`);
             throw e;
         }
