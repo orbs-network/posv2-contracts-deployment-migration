@@ -97,61 +97,40 @@ async function migrate() {
         gasPrice: gasPriceGwei,
         from: migrationManager
     };
+
     for (const b of batched) {
         console.log(`Delegations.importDelegations(${JSON.stringify(b.from)}, ${JSON.stringify(b.to)})!`);
-        const doTx = (i) => {
-            promises.push(new Promise((resolve, reject) => {
-                cnts.delegations.methods.importDelegations(b.from, b.to, false).send(txOpts)
-                    .on('transactionHash', function(hash){
-                        console.log(`[${i}]`, 'hash', hash);
-                    })
-                    .on('confirmation', function(confirmationNumber, receipt){
-                        console.log(`[${i}]`, 'confirmation', receipt.transactionHash, confirmationNumber);
-                        if (confirmationNumber > 6) {
-                            resolve(receipt);
-                        }
-                    })
-                    .on('receipt', function(receipt){
-                        console.log(`[${i}]`, 'receipt', receipt.transactionHash, receipt.gasUsed, receipt.blockNumber);
-                    })
-                    .on('error', function(error, receipt) { // If the transaction was rejected by the network with a receipt, the second parameter will be the receipt.
-                        console.log(`[${i}]`, 'error', receipt.transactionHash);
-                        reject(receipt);
-                    });
-                }));
-        };
-        doTx(txCount++);
-
+        promises.push(_sendOneTx(cnts.delegations.methods.importDelegations(b.from, b.to, false), txOpts, txCount++));
     }
 
     // refresh stake transactions
     for (const r of refreshStake) {
         console.log(`Delegations.refreshStake(${r.for})!`);
-        const doTx = (i) => {
-            promises.push(new Promise((resolve, reject) => {
-                cnts.delegations.methods.refreshStake(r.for).send(txOpts)
-                    .on('transactionHash', function (hash) {
-                        console.log(`[${i}]`, 'hash', hash);
-                    })
-                    .on('confirmation', function (confirmationNumber, receipt) {
-                        console.log(`[${i}]`, 'confirmation', receipt.transactionHash, confirmationNumber);
-                        if (confirmationNumber > 6) {
-                            resolve(receipt);
-                        }
-                    })
-                    .on('receipt', function (receipt) {
-                        console.log(`[${i}]`, 'receipt', receipt.transactionHash, receipt.gasUsed, receipt.blockNumber);
-                    })
-                    .on('error', function (error, receipt) { // If the transaction was rejected by the network with a receipt, the second parameter will be the receipt.
-                        console.log(`[${i}]`, 'error', receipt.transactionHash)
-                        reject(receipt);
-                    });
-            }));
-        };
-        doTx(txCount++);
+        promises.push(_sendOneTx(cnts.delegations.methods.refreshStake(r.for), txOpts, txCount++));
     }
     await Promise.all(promises);
+}
 
+function _sendOneTx(methodObj, txOpts, i) {
+    return new Promise((resolve, reject) => {
+        methodObj.send(txOpts)
+            .on('transactionHash', function (hash) {
+                console.log(`[${i}]`, 'hash', hash);
+            })
+            .on('confirmation', function (confirmationNumber, receipt) {
+                console.log(`[${i}]`, 'confirmation', receipt.transactionHash, confirmationNumber);
+                if (confirmationNumber > 6) {
+                    resolve(receipt);
+                }
+            })
+            .on('receipt', function (receipt) {
+                console.log(`[${i}]`, 'receipt', receipt.transactionHash, `gas: ${receipt.gasUsed}`, `block: ${receipt.blockNumber}`);
+            })
+            .on('error', function (error, receipt) { // If the transaction was rejected by the network with a receipt, the second parameter will be the receipt.
+                console.log(`[${i}]`, 'error', receipt.transactionHash, error);
+                reject(receipt);
+            });
+    });
 }
 
 async function determineMigrationManager() {
