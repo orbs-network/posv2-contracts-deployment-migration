@@ -51,7 +51,6 @@ async function initContractGlobals() {
 }
 
 async function migrate() {
-    const startTime = new Date().getTime();
     const migrationManager = await determineMigrationManager();
 
     // this may take a few minutes if the user chooses to build a new snapshot
@@ -59,7 +58,17 @@ async function migrate() {
 
     const batched = await splitBatches(importDelegations, migrationManager);
 
-    await estimateGasUsage(batched, refreshStake, migrationManager);
+    const { totalGas, maxGas } = await estimateGasUsage(batched, refreshStake, migrationManager);
+
+    // prompt summary
+    const gasPriceSuggest = await web3.eth.getGasPrice();
+    const gasPriceSuggestGwei = web3.utils.fromWei(gasPriceSuggest, "gwei");
+    const gasPriceSuggestEth = web3.utils.fromWei(gasPriceSuggest, "ether");
+    const totalPriceEth = gasPriceSuggestEth * totalGas;
+
+    console.log(`total tx count ${batched.length + refreshStake.length}`);
+    console.log(`Estimated total gas is ${totalGas}, with the max tx consuming ${maxGas}.`);
+    console.log(`Gas price is ${gasPriceSuggestGwei} (gwei), estimated costs are ${totalPriceEth} ETH`);
 
     const {proceed, gasPriceGwei} = await promptGasPriceGwei(Math.trunc(gasPriceSuggestGwei));
 
@@ -96,7 +105,7 @@ async function estimateGasUsage(importDelegatinosBatched, refreshStake, migratio
     // refresh stake transactions
     for (const r of refreshStake) {
         console.log(`Delegations.refreshStake(${r.for}) // (${r.cause})...`);
-        const gas = await cnts.delegations.methods.refreshStake(r.for).estimateGas();
+        const gas = await cnts.delegations.methods.refreshStake(r.for).estimateGas({from: migrationManager});
         gasEstimates.push({gas, method: "refreshStake"});
     }
     console.log(JSON.stringify(gasEstimates, null, 2));
@@ -104,15 +113,7 @@ async function estimateGasUsage(importDelegatinosBatched, refreshStake, migratio
     // summary
     const maxGas = gasEstimates.reduce((max, ge) => Math.max(max, ge.gas), 0);
     const totalGas = gasEstimates.reduce((sum, ge) => sum + ge.gas, 0);
-    const gasPriceSuggest = await web3.eth.getGasPrice();
-    const gasPriceSuggestGwei = web3.utils.fromWei(gasPriceSuggest, "gwei");
-    const gasPriceSuggestEth = web3.utils.fromWei(gasPriceSuggest, "ether");
-    const totalPriceEth = gasPriceSuggestEth * totalGas;
-
-    console.log("execution time", (new Date().getTime() - startTime) / 1000 / 60, "min");
-    console.log(`${importDelegatinosBatched.length} import batches of size: ${JSON.stringify(importDelegatinosBatched.map(b=>b.len))}`);
-    console.log(`Estimated total gas is ${totalGas}, with the max tx consuming ${maxGas}.`);
-    console.log(`Gas price is ${gasPriceSuggestGwei} (gwei), estimated costs are ${totalPriceEth} ETH`);
+    return { totalGas, maxGas };
 }
 
 async function loadMigrationSnapshot() {
@@ -185,7 +186,7 @@ async function _checkV1Delegations(delegator, delegatesMigratedIdentity) {
 
 async function _appendToSnapshot(delegator, delegatesMigratedIdentity, snapshot) {
 
-    const v1DelegationsDesc = await _checkV1Delegations(delegator, importDelegations, delegatesMigratedIdentity);
+    const v1DelegationsDesc = await _checkV1Delegations(delegator, snapshot.importDelegations, delegatesMigratedIdentity);
 
     const v2Delegation = await callWithRetry(cnts.delegations.methods.getDelegation(delegator));
     if (v1DelegationsDesc.to && // there was any delegation
@@ -216,7 +217,7 @@ async function _appendToSnapshot(delegator, delegatesMigratedIdentity, snapshot)
         }
     }
 
-    console.log('processed', s);
+    console.log('processed', delegator);
 }
 
 function _insertAndDeDup(refreshStakeArr, uniqueAttr, refreshStakeOp, replace) {
