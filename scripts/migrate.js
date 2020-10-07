@@ -4,7 +4,7 @@ const { promptGasPriceGwei, promptFileLoad } = require("./prompt");
 
 const snapshotFilename = "./migrationSnapshot.json";
 
-const maxBatchSize = 50;
+const maxBatchSize = 100;
 const gasLimitTx = 10000000;
 
 // addresses used internally by dev are not migrated
@@ -38,30 +38,56 @@ module.exports = async function(callback) {
 
 const cnts = {};
 async function initContractGlobals() {
-    cnts.contractRegistry = new web3.eth.Contract(contractRegistryAbi, contractRegistryAddress);
-    const delegationsContractAddress = await callWithRetry(cnts.contractRegistry.methods.getContract('delegations'));
 
-    cnts.delegations = new web3.eth.Contract(delegationsContractAbi, delegationsContractAddress);
     cnts.staking = new web3.eth.Contract(stakingContractAbi, stakingContractAddress);
     cnts.stakingAbi = stakingContractAbi;
     cnts.v1Delegations = new web3.eth.Contract(v1DelegationsContractAbi, v1DelegationsContractAddress);
     cnts.guardiansMigration = new web3.eth.Contract(guardiansMigrationV1V2Abi, guardiansMigrationV1V2ContractAddress);
+
+    cnts.contractRegistry = new web3.eth.Contract(contractRegistryAbi, contractRegistryAddress);
+    const delegationsContractAddress = await callWithRetry(cnts.contractRegistry.methods.getContract('delegations'));
+
+    cnts.delegations = new web3.eth.Contract(delegationsContractAbi, delegationsContractAddress);
 }
 
 async function migrate() {
-    const migrationManager = await callWithRetry(cnts.contractRegistry.methods.getManager("migrationManager"));
-    if (!(await web3.eth.getAccounts()).includes(migrationManager)) {
-        throw "Migration owner is not a known account. Check mnemonic and retry...";
-    }
     const startTime = new Date().getTime();
+    const migrationManager = await determineMigrationManager();
 
+    // this may take a few minutes if the user chooses to build a new snapshot
     const {importDelegations, refreshStake} = await loadMigrationSnapshot();
 
-    const batched = await _batchAndOptimizeImportDelegations(importDelegations, migrationManager);
+    const batched = await splitBatches(importDelegations, migrationManager);
+
+    await estimateGasUsage(batched, refreshStake, migrationManager);
+
+    const {proceed, gasPriceGwei} = await promptGasPriceGwei(Math.trunc(gasPriceSuggestGwei));
+
+    if (!proceed) {
+        console.log('Aborting..');
+        return;
+    }
+
+    // TODO send txes - apply gas price, from address, gas limit,
+    console.log('TODO - send transactions here.... coming soon :(')
+}
+
+async function determineMigrationManager() {
+    const migrationManager = await callWithRetry(cnts.contractRegistry.methods.getManager("migrationManager"));
+
+    // verify we can sign as migrationManager
+    if (!(await web3.eth.getAccounts()).includes(migrationManager)) {
+        throw "migrationManager is not a known account. Check mnemonic and retry...";
+    }
+
+    return migrationManager;
+}
+
+async function estimateGasUsage(importDelegatinosBatched, refreshStake, migrationManager) {
+    const gasEstimates = [];
 
     // import delegation transactions
-    const gasEstimates = [];
-    for (const b of batched) {
+    for (const b of importDelegatinosBatched) {
         console.log(`Delegations.importDelegations(${JSON.stringify(b.from)}, ${JSON.stringify(b.to)})...`);
         const gas = await cnts.delegations.methods.importDelegations(b.from, b.to, false).estimateGas({from: migrationManager});
         gasEstimates.push({gas, method: "importDelegations"});
@@ -73,9 +99,9 @@ async function migrate() {
         const gas = await cnts.delegations.methods.refreshStake(r.for).estimateGas();
         gasEstimates.push({gas, method: "refreshStake"});
     }
-
     console.log(JSON.stringify(gasEstimates, null, 2));
 
+    // summary
     const maxGas = gasEstimates.reduce((max, ge) => Math.max(max, ge.gas), 0);
     const totalGas = gasEstimates.reduce((sum, ge) => sum + ge.gas, 0);
     const gasPriceSuggest = await web3.eth.getGasPrice();
@@ -84,20 +110,9 @@ async function migrate() {
     const totalPriceEth = gasPriceSuggestEth * totalGas;
 
     console.log("execution time", (new Date().getTime() - startTime) / 1000 / 60, "min");
-    console.log(`${batched.length} import batches of size: ${JSON.stringify(batched.map(b=>b.len))}`);
+    console.log(`${importDelegatinosBatched.length} import batches of size: ${JSON.stringify(importDelegatinosBatched.map(b=>b.len))}`);
     console.log(`Estimated total gas is ${totalGas}, with the max tx consuming ${maxGas}.`);
     console.log(`Gas price is ${gasPriceSuggestGwei} (gwei), estimated costs are ${totalPriceEth} ETH`);
-
-    const {proceed, gasPriceGwei} = await promptGasPriceGwei(Math.trunc(gasPriceSuggestGwei));
-
-    if (!proceed) {
-        console.log('Aborting..');
-        return;
-    }
-
-
-    // TODO send txes - apply gas price, from address, gas limit,
-    console.log('TODO - send transactions here.... coming soon :(')
 }
 
 async function loadMigrationSnapshot() {
@@ -114,28 +129,22 @@ async function loadMigrationSnapshot() {
 }
 
 async function _constructSnapshot() {
-// populate snapshot object
+    // populate snapshot object
     const snapshot = {importDelegations: [], refreshStake: []};
 
     // initialize team wallet delegation:
     snapshot.importDelegations.push({from: TEAM_WALLET_ADDRESS, to: VOID_DELEGATION});
 
-    const {stakers, identityMigration} = await _populateStakersAndIdentityMigration();
-    for (let s of stakers) {
-        const op = await _checkDelegator(s, identityMigration);
-        if (op.importDelegations) {
-            snapshot.importDelegations.push(op.importDelegations);
-            _insertUniquely(snapshot.refreshStake, op.refreshStake, true);
-        }
-        _insertUniquely(snapshot.refreshStake, op.refreshStake, false);
+    const stakers = await _readStakerIdentitiesFromLogs();
+    const identityMigration = await _readIdentityConversionsFromState(stakers);
 
-        console.log('processed', s);
+    for (let s of stakers) {
+        await _appendToSnapshot(s, identityMigration, snapshot);
     }
     return snapshot;
 }
 
-async function _populateStakersAndIdentityMigration() {
-
+async function _readStakerIdentitiesFromLogs() {
     const events = await getPastEventsFromMainnet(stakingContractAbi, stakingContractAddress, "Staked");
     const unique = {};
     events.map(e => {
@@ -144,19 +153,19 @@ async function _populateStakersAndIdentityMigration() {
         }
     });
 
-    const stakers = Object.keys(unique);
-
-    const identityMigration = (await callWithRetry(cnts.guardiansMigration.methods.getGuardiansV2AddressBatch(stakers)))
-        .reduce((m, newAddress, i)=> {
-            m[stakers[i]] = newAddress;
-            return m
-            },
-        {});
-    return {stakers, identityMigration};
+    return Object.keys(unique);
 }
 
-async function _checkDelegator(delegator, delegatesMigratedIdentity) {
+async function _readIdentityConversionsFromState(stakers) {
+    return (await callWithRetry(cnts.guardiansMigration.methods.getGuardiansV2AddressBatch(stakers)))
+        .reduce((m, newAddress, i) => {
+                m[stakers[i]] = newAddress;
+                return m
+            },
+            {});
+}
 
+async function _checkV1Delegations(delegator, delegatesMigratedIdentity) {
     const importDelegations = {};
     const explicitV1Delegation = await _checkV1ExplicitDelegation(delegator);
     if (explicitV1Delegation) {
@@ -171,53 +180,58 @@ async function _checkDelegator(delegator, delegatesMigratedIdentity) {
             importDelegations.cause = "implicitly delegated in v1";
         }
     }
+    return importDelegations;
+}
+
+async function _appendToSnapshot(delegator, delegatesMigratedIdentity, snapshot) {
+
+    const v1DelegationsDesc = await _checkV1Delegations(delegator, importDelegations, delegatesMigratedIdentity);
+
     const v2Delegation = await callWithRetry(cnts.delegations.methods.getDelegation(delegator));
-    if (importDelegations.to &&
-        importDelegations.to !== v2Delegation &&
-        importDelegations.to !== delegator) { // self delegation is handled later by refreshStake
-        return {
-            importDelegations,
-            refreshStake: {
-                for: importDelegations.to,
-                cause: "found at least one delegator"
-            }
-        }
-    }
+    if (v1DelegationsDesc.to && // there was any delegation
+        v1DelegationsDesc.to !== v2Delegation && // PoS contract is not already aware of the delegation
+        v1DelegationsDesc.to !== delegator) { // self delegation is handled later by refreshStake
 
-    // delegator self delegating (or V2 delegations contract is already aware of her delegation).
-    // if someone else delegates to her - she will get a refreshStake entry in the code above.
-    // Otherwise, her stake will not be refreshed by 'importDelegations', so:
-    // we're only worried about the case where no one delegates to her, and she is not delegating to others.
-    // therefore, we can ensure her self stake is identical to be her delegated stake.
-    let stakedBalance = await callWithRetry(cnts.staking.methods.getStakeBalanceOf(delegator));
-    let delegatedStake = await callWithRetry(cnts.delegations.methods.getDelegatedStake(delegator));
+        snapshot.importDelegations.push(v1DelegationsDesc);
+        _insertAndDeDup(snapshot.refreshStake, 'for', {
+            for: v1DelegationsDesc.to,
+            cause: "found at least one delegator"
+        }, true);
+    } else {
+        // delegator self delegating (or V2 delegations contract is already aware of her delegation).
+        // if someone else delegates to her - she will get a refreshStake entry in the code above.
+        // Otherwise, her stake will not be refreshed by 'v1DelegationsDesc', so:
+        // we're only worried about the case where no one delegates to her, and she is not delegating to others.
+        // therefore, we can ensure her self stake is identical to be her delegated stake.
+        let stakedBalance = await callWithRetry(cnts.staking.methods.getStakeBalanceOf(delegator));
+        let delegatedStake = await callWithRetry(cnts.delegations.methods.getDelegatedStake(delegator));
 
-    if (delegatedStake !== stakedBalance) {
-        return {
-            refreshStake: {
+        if (delegatedStake !== stakedBalance) {
+            _insertAndDeDup(snapshot.refreshStake, 'for', {
                 for: delegator,
                 stakedBalance,
                 delegatedStake,
                 cause: "self delegating with potentially no delegations"
-            }
+            }, false);
         }
     }
-    return {}
+
+    console.log('processed', s);
 }
 
-function _insertUniquely(refreshStakeArr, refreshStakeOp, replace) {
+function _insertAndDeDup(refreshStakeArr, uniqueAttr, refreshStakeOp, replace) {
     if (refreshStakeOp === undefined) {
         return;
     }
-    const existingIndex = refreshStakeArr.map(rs=>rs.for).indexOf(refreshStakeOp.for);
-    if (existingIndex == -1) {
+    const existingIndex = refreshStakeArr.map(rs=>rs[uniqueAttr]).indexOf(refreshStakeOp[uniqueAttr]);
+    if (existingIndex === -1) {
         refreshStakeArr.push(refreshStakeOp);
     } else if (replace) {
         refreshStakeArr[existingIndex] = refreshStakeOp;
     }
 }
 
-function _addressAsTopic(delegator) {
+function _addressAsEventTopic(delegator) {
     return `0x${'0'.repeat(24)}${delegator.slice(2)}`;
 }
 
@@ -228,7 +242,7 @@ async function _checkV1ExplicitDelegation(delegator) {
 }
 
 async function _checkV1ImplicitDelegation(delegator) {
-    const implicitV1Delegation = (await getPastEventsFromMainnet([erc20TransferEventAbi], orbsTokenAddress, 'Transfer', [(_addressAsTopic(delegator))]))
+    const implicitV1Delegation = (await getPastEventsFromMainnet([erc20TransferEventAbi], orbsTokenAddress, 'Transfer', [(_addressAsEventTopic(delegator))]))
         .filter(t => t.value === '70000000000000000').pop();
 
     return implicitV1Delegation ? implicitV1Delegation.to : undefined;
@@ -238,20 +252,26 @@ function _translateGuardianIdentity(delegatesMigratedIdentity, v1DelegationV1Ide
     return delegatesMigratedIdentity[v1DelegationV1Identity] || v1DelegationV1Identity;
 }
 
-async function _batchImportDelegationTransactions(sorted, maxBatchSize, migrationOwner) {
+async function splitBatches(importDelegations, migrationOwner) {
+    if (!importDelegations || !importDelegations.length) {
+        return [];
+    }
 
-    const batches = sorted.reduce((batchedArr, delegationItem)=>{
-        const prevBatch = batchedArr.length ? batchedArr[batchedArr.length - 1] : undefined;
-        if (prevBatch === undefined || prevBatch.len >= maxBatchSize || prevBatch.to !== delegationItem.to) {
-            batchedArr.push({from: [], to: delegationItem.to, len: 0})
-        }
-        const currentBatch = batchedArr[batchedArr.length - 1];
-        currentBatch.from.push(delegationItem.from);
-        currentBatch.len++;
-        return batchedArr;
-    }, []);
+    const sorted = importDelegations.sort((a,b) => {
+        const aTo = a.to.toLowerCase();
+        const bTo = b.to.toLowerCase();
+        if (aTo < bTo) return -1;
+        if (aTo > bTo) return 1;
+        return 0;
+    } );
 
-    console.log(`splitting to batches of ${maxBatchSize}`);
+    return await _splitAndVerifyGasLimits(sorted, maxBatchSize, migrationOwner);
+}
+
+async function _splitAndVerifyGasLimits(sorted, maxBatchSize, migrationOwner) {
+
+    console.log(`splitting to batches up to ${maxBatchSize}`);
+    const batches = _splitBatches(sorted, maxBatchSize);
 
     // gas estimate that batches are small enough to pass
     for (const i in batches) {
@@ -261,18 +281,18 @@ async function _batchImportDelegationTransactions(sorted, maxBatchSize, migratio
 
             if (gas > gasLimitTx) {
                 if (maxBatchSize > 1) {
-                    return await _batchImportDelegationTransactions(sorted, maxBatchSize - 1, migrationOwner);
+                    return await _splitAndVerifyGasLimits(sorted, maxBatchSize - 1, migrationOwner);
                 }
-                console.log(`gas cost: ${gas} for: importDelegations(${JSON.stringify(b.from)}, ${JSON.stringify(b.to)}, false)`);
+                console.log(`gas cost: ${gas} for: importDelegations(${JSON.stringify(b.from)}, ${JSON.stringify(b.to)})`);
                 throw "smallest batch exceeds gas limit"
             }
-            console.log(`batch ${i} gas estimate passed, for max batch size ${maxBatchSize}`)
+            console.log(`batch ${i} size ${b.len} delegates to ${b.to}. gas estimate passed`)
         } catch (e) {
             if (e.code && e.code === -32000 && maxBatchSize > 1) {
-                return await _batchImportDelegationTransactions(sorted, maxBatchSize - 1, migrationOwner);
+                return await _splitAndVerifyGasLimits(sorted, maxBatchSize - 1, migrationOwner);
             }
             console.log(`smallest batch failed: ${JSON.stringify(e)}`);
-            console.log(`failed to estimate gas for: importDelegations(${JSON.stringify(b.from)}, ${JSON.stringify(b.to)}, false)`);
+            console.log(`failed to estimate gas for: importDelegations(${JSON.stringify(b.from)}, ${JSON.stringify(b.to)})`);
             throw e;
         }
     }
@@ -280,19 +300,18 @@ async function _batchImportDelegationTransactions(sorted, maxBatchSize, migratio
     return batches;
 }
 
-async function _batchAndOptimizeImportDelegations(importDelegations, migrationOwner) {
-    if (!importDelegations || !importDelegations.length) {
-        return [];
-    }
-
-
-    const sorted = importDelegations.sort((a,b) => {
-        if (a.to < b.to) return -1;
-        if (a.to > b.to) return 1;
-        return 0;
-    } );
-
-    return await _batchImportDelegationTransactions(sorted, maxBatchSize, migrationOwner);
+function _splitBatches(sorted, maxBatchSize) {
+    const batches = sorted.reduce((batchedArr, delegationItem) => {
+        const prevBatch = batchedArr.length ? batchedArr[batchedArr.length - 1] : undefined;
+        if (prevBatch === undefined || prevBatch.len >= maxBatchSize || prevBatch.to !== delegationItem.to) {
+            batchedArr.push({from: [], to: delegationItem.to, len: 0})
+        }
+        const currentBatch = batchedArr[batchedArr.length - 1];
+        currentBatch.from.push(delegationItem.from);
+        currentBatch.len++;
+        return batchedArr;
+    }, []);
+    return batches;
 }
 
 async function callWithRetry(method, options) {
