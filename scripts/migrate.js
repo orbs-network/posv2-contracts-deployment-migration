@@ -1,9 +1,8 @@
 const fs = require('fs');
-const readline = require("readline");
 const { getPastEventsFromMainnet } = require('./mainnet_event_fetcher');
-const cntr = {};
+const { promptGasPriceGwei, promptFileLoad } = require("./prompt");
 
-// const hasGuardianMigrations = guardiansMigrationV1V2ContractAddress && guardiansMigrationV1V2ContractAddress.replace(/[0x]/g, "").length > 0;
+const snapshotFilename = "./migrationSnapshot.json";
 
 const maxBatchSize = 50;
 const gasLimitTx = 10000000;
@@ -14,6 +13,7 @@ const VOID_DELEGATION     = "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
 const DEV_TEST_ADDRESS    = "0x553C3781677a2185d4ea9C8EEFBE971F03ad1417";
 const stakersBlacklist    = [DEV_TEST_ADDRESS, TEAM_WALLET_ADDRESS];
 
+// contracts
 const contractRegistryAddress = JSON.parse(fs.readFileSync("../driverOptions.json")).contractRegistryForExistingContractsAddress;
 const contractRegistryAbi = JSON.parse(fs.readFileSync("../node_modules/@orbs-network/orbs-ethereum-contracts-v2/release/abi/ContractRegistry.abi"));
 const delegationsContractAbi = JSON.parse(fs.readFileSync("../node_modules/@orbs-network/orbs-ethereum-contracts-v2/release/abi/IDelegations.abi"));
@@ -24,43 +24,11 @@ const v1DelegationsContractAbi = JSON.parse("[{\"constant\":true,\"inputs\":[{\"
 const guardiansMigrationV1V2ContractAddress = "0xd2abc20b2a7bfdf4c7e126a669d2c43293845c7d";
 const guardiansMigrationV1V2Abi = JSON.parse("[{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"oldGuardianAddress\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newGuardianAddress\",\"type\":\"address\"}],\"name\":\"GuardianAddressMigrationRecorded\",\"type\":\"event\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"address\",\"name\":\"newAddress\",\"type\":\"address\"}],\"name\":\"setNewGuardianAddress\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"internalType\":\"address\",\"name\":\"oldAddress\",\"type\":\"address\"}],\"name\":\"getGuardianV2Address\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"newAddress\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"internalType\":\"address[]\",\"name\":\"oldAddresses\",\"type\":\"address[]\"}],\"name\":\"getGuardiansV2AddressBatch\",\"outputs\":[{\"internalType\":\"address[]\",\"name\":\"newAddresses\",\"type\":\"address[]\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"}]");
 const orbsTokenAddress = '0xff56cc6b1e6ded347aa0b7676c85ab0b3d08b0fa';
-const transferEventAbi = {
-    "anonymous": false,
-    "inputs": [
-        {
-            "indexed": true,
-            "internalType": "address",
-            "name": "from",
-            "type": "address"
-        },
-        {
-            "indexed": true,
-            "internalType": "address",
-            "name": "to",
-            "type": "address"
-        },
-        {
-            "indexed": false,
-            "internalType": "uint256",
-            "name": "value",
-            "type": "uint256"
-        }
-    ],
-    "name": "Transfer",
-    "type": "event"
-};
+const erc20TransferEventAbi = JSON.parse("{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"Transfer\",\"type\":\"event\"}");
 
 module.exports = async function(callback) {
     try {
-        cntr.contractRegistry = new web3.eth.Contract(contractRegistryAbi, contractRegistryAddress);
-        const delegationsContractAddress = await callWithRetry(cntr.contractRegistry.methods.getContract('delegations'));
-
-        cntr.delegations = new web3.eth.Contract(delegationsContractAbi, delegationsContractAddress);
-        cntr.staking = new web3.eth.Contract(stakingContractAbi, stakingContractAddress);
-        cntr.stakingAbi = stakingContractAbi;
-        cntr.v1Delegations = new web3.eth.Contract(v1DelegationsContractAbi, v1DelegationsContractAddress);
-        cntr.guardiansMigration = new web3.eth.Contract(guardiansMigrationV1V2Abi, guardiansMigrationV1V2ContractAddress);
-
+        await initContractGlobals();
         await migrate();
     } catch (e) {
         console.error(e)
@@ -68,47 +36,20 @@ module.exports = async function(callback) {
     callback();
 };
 
-async function loadMigrationSnapshot() {
-    const snapshotFilename = "./migrationSnapshot.json";
-    if (fs.existsSync(snapshotFilename) && await promptFileLoad()) {
-        return JSON.parse(fs.readFileSync(snapshotFilename).toString());
-    }
+const cnts = {};
+async function initContractGlobals() {
+    cnts.contractRegistry = new web3.eth.Contract(contractRegistryAbi, contractRegistryAddress);
+    const delegationsContractAddress = await callWithRetry(cnts.contractRegistry.methods.getContract('delegations'));
 
-    const {stakers, identityMigration} = await _populateStakersAndIdentityMigration();
-    // populate migration op arrays
-    const importDelegations = [];
-    const refreshStake = [];
-
-    // initialize team wallet delegation:
-    importDelegations.push({from: TEAM_WALLET_ADDRESS, to: VOID_DELEGATION});
-
-    // first topic is the from address
-    const implicitDelegations = [];
-
-    for (let s of stakers) {
-        const op = await _checkDelegator(s, identityMigration);
-        if (op.importDelegations) {
-            importDelegations.push(op.importDelegations);
-            if (!refreshStake.includes(op.importDelegations.to)) {
-                refreshStake.push(op.importDelegations.to);
-            }
-        }
-        if (op.refreshStake) {
-            refreshStake.push(op.refreshStake);
-        }
-        console.log('processed', s);
-    }
-
-    const snapshot = {importDelegations, refreshStake};
-    if (fs.existsSync(snapshotFilename)) {
-        fs.unlinkSync(snapshotFilename);
-    }
-    fs.writeFileSync(snapshotFilename, JSON.stringify(snapshot, null, 2));
-    return snapshot;
+    cnts.delegations = new web3.eth.Contract(delegationsContractAbi, delegationsContractAddress);
+    cnts.staking = new web3.eth.Contract(stakingContractAbi, stakingContractAddress);
+    cnts.stakingAbi = stakingContractAbi;
+    cnts.v1Delegations = new web3.eth.Contract(v1DelegationsContractAbi, v1DelegationsContractAddress);
+    cnts.guardiansMigration = new web3.eth.Contract(guardiansMigrationV1V2Abi, guardiansMigrationV1V2ContractAddress);
 }
 
 async function migrate() {
-    const migrationManager = await callWithRetry(cntr.contractRegistry.methods.getManager("migrationManager"));
+    const migrationManager = await callWithRetry(cnts.contractRegistry.methods.getManager("migrationManager"));
     if (!(await web3.eth.getAccounts()).includes(migrationManager)) {
         throw "Migration owner is not a known account. Check mnemonic and retry...";
     }
@@ -121,19 +62,16 @@ async function migrate() {
     // import delegation transactions
     const gasEstimates = [];
     for (const b of batched) {
-        const gas = await cntr.delegations.methods.importDelegations(b.from, b.to, false).estimateGas({from: migrationManager});
+        console.log(`Delegations.importDelegations(${JSON.stringify(b.from)}, ${JSON.stringify(b.to)})...`);
+        const gas = await cnts.delegations.methods.importDelegations(b.from, b.to, false).estimateGas({from: migrationManager});
         gasEstimates.push({gas, method: "importDelegations"});
-        console.log(`Delegations.importDelegations(${JSON.stringify(b.from)}, ${JSON.stringify(b.to)}, false)`);
     }
 
     // refresh stake transactions
     for (const r of refreshStake) {
-        const gas = await cntr.delegations.methods.refreshStake(r).estimateGas();
+        console.log(`Delegations.refreshStake(${r.for}) // (${r.cause})...`);
+        const gas = await cnts.delegations.methods.refreshStake(r.for).estimateGas();
         gasEstimates.push({gas, method: "refreshStake"});
-        console.log(`Delegations.refreshStake(${r})`);
-
-        // TODO remove
-        throw "This should not happen as long as we use importDelegations instead";
     }
 
     console.log(JSON.stringify(gasEstimates, null, 2));
@@ -150,7 +88,7 @@ async function migrate() {
     console.log(`Estimated total gas is ${totalGas}, with the max tx consuming ${maxGas}.`);
     console.log(`Gas price is ${gasPriceSuggestGwei} (gwei), estimated costs are ${totalPriceEth} ETH`);
 
-    const {proceed, gasPriceGwei} = await prompt(Math.trunc(gasPriceSuggestGwei));
+    const {proceed, gasPriceGwei} = await promptGasPriceGwei(Math.trunc(gasPriceSuggestGwei));
 
     if (!proceed) {
         console.log('Aborting..');
@@ -160,6 +98,40 @@ async function migrate() {
 
     // TODO send txes - apply gas price, from address, gas limit,
     console.log('TODO - send transactions here.... coming soon :(')
+}
+
+async function loadMigrationSnapshot() {
+    if (fs.existsSync(snapshotFilename) && await promptFileLoad()) {
+        return JSON.parse(fs.readFileSync(snapshotFilename).toString());
+    }
+
+    const snapshot = await _constructSnapshot();
+    if (fs.existsSync(snapshotFilename)) {
+        fs.unlinkSync(snapshotFilename);
+    }
+    fs.writeFileSync(snapshotFilename, JSON.stringify(snapshot, null, 2));
+    return snapshot;
+}
+
+async function _constructSnapshot() {
+// populate snapshot object
+    const snapshot = {importDelegations: [], refreshStake: []};
+
+    // initialize team wallet delegation:
+    snapshot.importDelegations.push({from: TEAM_WALLET_ADDRESS, to: VOID_DELEGATION});
+
+    const {stakers, identityMigration} = await _populateStakersAndIdentityMigration();
+    for (let s of stakers) {
+        const op = await _checkDelegator(s, identityMigration);
+        if (op.importDelegations) {
+            snapshot.importDelegations.push(op.importDelegations);
+            _insertUniquely(snapshot.refreshStake, op.refreshStake, true);
+        }
+        _insertUniquely(snapshot.refreshStake, op.refreshStake, false);
+
+        console.log('processed', s);
+    }
+    return snapshot;
 }
 
 async function _populateStakersAndIdentityMigration() {
@@ -174,7 +146,7 @@ async function _populateStakersAndIdentityMigration() {
 
     const stakers = Object.keys(unique);
 
-    const identityMigration = (await callWithRetry(cntr.guardiansMigration.methods.getGuardiansV2AddressBatch(stakers)))
+    const identityMigration = (await callWithRetry(cnts.guardiansMigration.methods.getGuardiansV2AddressBatch(stakers)))
         .reduce((m, newAddress, i)=> {
             m[stakers[i]] = newAddress;
             return m
@@ -184,43 +156,93 @@ async function _populateStakersAndIdentityMigration() {
 }
 
 async function _checkDelegator(delegator, delegatesMigratedIdentity) {
-    const v2Delegation = await callWithRetry(cntr.delegations.methods.getDelegation(delegator));
 
-    let v1DelegationV1Identity = await callWithRetry(cntr.v1Delegations.methods.getCurrentDelegation(delegator));
-    if (v1DelegationV1Identity === "0x0000000000000000000000000000000000000000") {
-        const implicitDelegation = (await getPastEventsFromMainnet([transferEventAbi], orbsTokenAddress, 'Transfer', [`0x${'0'.repeat(24)}${delegator.slice(2)}`]))
-            .filter(t => t.value === '70000000000000000' ).pop();
-        if (implicitDelegation) {
-            v1DelegationV1Identity = implicitDelegation.to;
-        } else {
-            v1DelegationV1Identity = delegator;
+    const importDelegations = {};
+    const explicitV1Delegation = await _checkV1ExplicitDelegation(delegator);
+    if (explicitV1Delegation) {
+        importDelegations.from = delegator;
+        importDelegations.to = _translateGuardianIdentity(delegatesMigratedIdentity, explicitV1Delegation);
+        importDelegations.cause = "explicitly delegated in v1";
+    } else {
+        const implicitV1Delegation = await _checkV1ImplicitDelegation(delegator);
+        if (implicitV1Delegation) {
+            importDelegations.from = delegator;
+            importDelegations.to = _translateGuardianIdentity(delegatesMigratedIdentity, implicitV1Delegation);
+            importDelegations.cause = "implicitly delegated in v1";
         }
     }
-    const v1Delegation = delegatesMigratedIdentity[v1DelegationV1Identity] || v1DelegationV1Identity;
-
-    if (v1Delegation !== v2Delegation && v1Delegation != delegator) { // we don't do self delegations!!
+    const v2Delegation = await callWithRetry(cnts.delegations.methods.getDelegation(delegator));
+    if (importDelegations.to &&
+        importDelegations.to !== v2Delegation &&
+        importDelegations.to !== delegator) { // self delegation is handled later by refreshStake
         return {
-            importDelegations: {from: delegator, to: v1Delegation}
-        };
+            importDelegations,
+            refreshStake: {
+                for: importDelegations.to,
+                cause: "found at least one delegator"
+            }
+        }
     }
 
-    // if we dont import delegations check if need to update stake:
-    let scb = await callWithRetry(cntr.staking.methods.getStakeBalanceOf(delegator));
-    let dcb = await callWithRetry(cntr.delegations.methods.getDelegatedStake(delegator));
+    // delegator self delegating (or V2 delegations contract is already aware of her delegation).
+    // if someone else delegates to her - she will get a refreshStake entry in the code above.
+    // Otherwise, her stake will not be refreshed by 'importDelegations', so:
+    // we're only worried about the case where no one delegates to her, and she is not delegating to others.
+    // therefore, we can ensure her self stake is identical to be her delegated stake.
+    let stakedBalance = await callWithRetry(cnts.staking.methods.getStakeBalanceOf(delegator));
+    let delegatedStake = await callWithRetry(cnts.delegations.methods.getDelegatedStake(delegator));
 
-    if (dcb !== scb) {
+    if (delegatedStake !== stakedBalance) {
         return {
-            refreshStake: delegator
+            refreshStake: {
+                for: delegator,
+                stakedBalance,
+                delegatedStake,
+                cause: "self delegating with potentially no delegations"
+            }
         }
     }
     return {}
 }
 
-async function _batchImportDelegationTransactions(sorted, batchSize, migrationOwner) {
+function _insertUniquely(refreshStakeArr, refreshStakeOp, replace) {
+    if (refreshStakeOp === undefined) {
+        return;
+    }
+    const existingIndex = refreshStakeArr.map(rs=>rs.for).indexOf(refreshStakeOp.for);
+    if (existingIndex == -1) {
+        refreshStakeArr.push(refreshStakeOp);
+    } else if (replace) {
+        refreshStakeArr[existingIndex] = refreshStakeOp;
+    }
+}
+
+function _addressAsTopic(delegator) {
+    return `0x${'0'.repeat(24)}${delegator.slice(2)}`;
+}
+
+async function _checkV1ExplicitDelegation(delegator) {
+    let v1DelegationV1Identity = await callWithRetry(cnts.v1Delegations.methods.getCurrentDelegation(delegator));
+    const explicitV1Delegation = v1DelegationV1Identity !== "0x0000000000000000000000000000000000000000";
+    return explicitV1Delegation ? v1DelegationV1Identity : undefined;
+}
+
+async function _checkV1ImplicitDelegation(delegator) {
+    const implicitV1Delegation = (await getPastEventsFromMainnet([erc20TransferEventAbi], orbsTokenAddress, 'Transfer', [(_addressAsTopic(delegator))]))
+        .filter(t => t.value === '70000000000000000').pop();
+
+    return implicitV1Delegation ? implicitV1Delegation.to : undefined;
+}
+
+function _translateGuardianIdentity(delegatesMigratedIdentity, v1DelegationV1Identity) {
+    return delegatesMigratedIdentity[v1DelegationV1Identity] || v1DelegationV1Identity;
+}
+
+async function _batchImportDelegationTransactions(sorted, maxBatchSize, migrationOwner) {
 
     const batches = sorted.reduce((batchedArr, delegationItem)=>{
         const prevBatch = batchedArr.length ? batchedArr[batchedArr.length - 1] : undefined;
-        if (prevBatch === undefined || prevBatch.len >= batchSize || prevBatch.to !== delegationItem.to) {
+        if (prevBatch === undefined || prevBatch.len >= maxBatchSize || prevBatch.to !== delegationItem.to) {
             batchedArr.push({from: [], to: delegationItem.to, len: 0})
         }
         const currentBatch = batchedArr[batchedArr.length - 1];
@@ -229,25 +251,25 @@ async function _batchImportDelegationTransactions(sorted, batchSize, migrationOw
         return batchedArr;
     }, []);
 
-    console.log(`splitting to batches of ${batchSize}`);
+    console.log(`splitting to batches of ${maxBatchSize}`);
 
     // gas estimate that batches are small enough to pass
     for (const i in batches) {
         const b = batches[i];
         try{
-            const gas = await cntr.delegations.methods.importDelegations(b.from, b.to, false).estimateGas({from: migrationOwner});
+            const gas = await cnts.delegations.methods.importDelegations(b.from, b.to, false).estimateGas({from: migrationOwner});
 
             if (gas > gasLimitTx) {
-                if (batchSize > 1) {
-                    return await _batchImportDelegationTransactions(sorted, batchSize - 1, migrationOwner);
+                if (maxBatchSize > 1) {
+                    return await _batchImportDelegationTransactions(sorted, maxBatchSize - 1, migrationOwner);
                 }
                 console.log(`gas cost: ${gas} for: importDelegations(${JSON.stringify(b.from)}, ${JSON.stringify(b.to)}, false)`);
                 throw "smallest batch exceeds gas limit"
             }
-            console.log(`batch ${i} gas estimate passed, for batch size ${batchSize}`)
+            console.log(`batch ${i} gas estimate passed, for max batch size ${maxBatchSize}`)
         } catch (e) {
-            if (e.code && e.code === -32000 && batchSize > 1) {
-                return await _batchImportDelegationTransactions(sorted, batchSize - 1, migrationOwner);
+            if (e.code && e.code === -32000 && maxBatchSize > 1) {
+                return await _batchImportDelegationTransactions(sorted, maxBatchSize - 1, migrationOwner);
             }
             console.log(`smallest batch failed: ${JSON.stringify(e)}`);
             console.log(`failed to estimate gas for: importDelegations(${JSON.stringify(b.from)}, ${JSON.stringify(b.to)}, false)`);
@@ -292,77 +314,3 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-
-async function prompt(gasPriceSuggestGwei) {
-    const rl = readline.createInterface({
-        input: process.stdin,
-        output: process.stdout
-    });
-
-    return await new Promise(async (resolutionFunc) => {
-        let gasPrice = gasPriceSuggestGwei;
-        const gasPriceCallback = function (answer) {
-            const newPrice = parseInt(answer);
-
-            if (answer === "") { // default selected
-                rl.question("Proceed with migration? [Yes/No] ", confirmCallback);
-
-            } else if (isNaN(newPrice) || newPrice <= 0) { // invalid
-
-                rl.question(`Please specify a positive integer.\nOverride gas price? [${gasPrice}] `, gasPriceCallback);
-
-            } else { // overriden
-
-                gasPrice = newPrice;
-                rl.question("Proceed with migration? [Yes/No] ", confirmCallback);
-
-            }
-        };
-
-        const confirmCallback = function (answer) {
-            switch (answer.toLowerCase()) {
-                case "yes":
-                case "y":
-                    resolutionFunc({proceed: true, gasPriceGwei: gasPrice});
-                    rl.close();
-                    break;
-                case "no":
-                case "n":
-                    resolutionFunc({proceed: false, gasPriceGwei: gasPrice});
-                    rl.close();
-                    break;
-                default:
-                    rl.question("Proceed with migration? [Yes/No] ", confirmCallback);
-            }
-        };
-        rl.question(`Override gas price? [${gasPrice}] `, gasPriceCallback);
-    });
-}
-
-async function promptFileLoad() {
-    const rl = readline.createInterface({
-        input: process.stdin,
-        output: process.stdout
-    });
-
-    return await new Promise(async (resolutionFunc) => {
-        const queryString = "Found a snapshot file. Load migration snapshot from file? [Load/Override] ";
-        const confirmCallback = function (answer) {
-            switch (answer.toLowerCase()) {
-                case "l":
-                case "load":
-                    resolutionFunc(true);
-                    rl.close();
-                    break;
-                case "o":
-                case "override":
-                    resolutionFunc(false);
-                    rl.close();
-                    break;
-                default:
-                    rl.question(queryString, confirmCallback);
-            }
-        };
-        rl.question(queryString, confirmCallback);
-    });
-}
