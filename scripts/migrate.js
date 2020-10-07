@@ -9,29 +9,57 @@ const maxBatchSize = 50;
 const gasLimitTx = 10000000;
 
 // addresses used internally by dev are not migrated
-const stakersBlacklist = ["0x553C3781677a2185d4ea9C8EEFBE971F03ad1417"];
+const TEAM_WALLET_ADDRESS = "0xC200f98F3C088B868D80d8eb0aeb9D7eE18d604B";
+const VOID_DELEGATION     = "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
+const DEV_TEST_ADDRESS    = "0x553C3781677a2185d4ea9C8EEFBE971F03ad1417";
+const stakersBlacklist    = [DEV_TEST_ADDRESS, TEAM_WALLET_ADDRESS];
+
+const contractRegistryAddress = JSON.parse(fs.readFileSync("../driverOptions.json")).contractRegistryForExistingContractsAddress;
+const contractRegistryAbi = JSON.parse(fs.readFileSync("../node_modules/@orbs-network/orbs-ethereum-contracts-v2/release/abi/ContractRegistry.abi"));
+const delegationsContractAbi = JSON.parse(fs.readFileSync("../node_modules/@orbs-network/orbs-ethereum-contracts-v2/release/abi/IDelegations.abi"));
+const stakingContractAddress = "0x01D59Af68E2dcb44e04C50e05F62E7043F2656C3";
+const stakingContractAbi = JSON.parse(fs.readFileSync("../node_modules/@orbs-network/orbs-ethereum-contracts-v2/release/abi/IStakingContract.abi"));
+const v1DelegationsContractAddress = "0x30f855afb78758Aa4C2dc706fb0fA3A98c865d2d";
+const v1DelegationsContractAbi = JSON.parse("[{\"constant\":true,\"inputs\":[{\"name\":\"delegator\",\"type\":\"address\"}],\"name\":\"getCurrentDelegation\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"to\",\"type\":\"address\"}],\"name\":\"delegate\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[],\"name\":\"undelegate\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"guardian\",\"type\":\"address\"}],\"name\":\"getCurrentVote\",\"outputs\":[{\"name\":\"validators\",\"type\":\"address[]\"},{\"name\":\"blockNumber\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"maxVoteOutCount\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"guardian\",\"type\":\"address\"}],\"name\":\"getCurrentVoteBytes20\",\"outputs\":[{\"name\":\"validatorsBytes20\",\"type\":\"bytes20[]\"},{\"name\":\"blockNumber\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"validators\",\"type\":\"address[]\"}],\"name\":\"voteOut\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"VERSION\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"name\":\"maxVoteOutCount_\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"name\":\"voter\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"validators\",\"type\":\"address[]\"},{\"indexed\":false,\"name\":\"voteCounter\",\"type\":\"uint256\"}],\"name\":\"VoteOut\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"name\":\"delegator\",\"type\":\"address\"},{\"indexed\":true,\"name\":\"to\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"delegationCounter\",\"type\":\"uint256\"}],\"name\":\"Delegate\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"name\":\"delegator\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"delegationCounter\",\"type\":\"uint256\"}],\"name\":\"Undelegate\",\"type\":\"event\"}]");
+const guardiansMigrationV1V2ContractAddress = "0xd2abc20b2a7bfdf4c7e126a669d2c43293845c7d";
+const guardiansMigrationV1V2Abi = JSON.parse("[{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"oldGuardianAddress\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newGuardianAddress\",\"type\":\"address\"}],\"name\":\"GuardianAddressMigrationRecorded\",\"type\":\"event\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"address\",\"name\":\"newAddress\",\"type\":\"address\"}],\"name\":\"setNewGuardianAddress\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"internalType\":\"address\",\"name\":\"oldAddress\",\"type\":\"address\"}],\"name\":\"getGuardianV2Address\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"newAddress\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"internalType\":\"address[]\",\"name\":\"oldAddresses\",\"type\":\"address[]\"}],\"name\":\"getGuardiansV2AddressBatch\",\"outputs\":[{\"internalType\":\"address[]\",\"name\":\"newAddresses\",\"type\":\"address[]\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"}]");
+const orbsTokenAddress = '0xff56cc6b1e6ded347aa0b7676c85ab0b3d08b0fa';
+const transferEventAbi = {
+    "anonymous": false,
+    "inputs": [
+        {
+            "indexed": true,
+            "internalType": "address",
+            "name": "from",
+            "type": "address"
+        },
+        {
+            "indexed": true,
+            "internalType": "address",
+            "name": "to",
+            "type": "address"
+        },
+        {
+            "indexed": false,
+            "internalType": "uint256",
+            "name": "value",
+            "type": "uint256"
+        }
+    ],
+    "name": "Transfer",
+    "type": "event"
+};
 
 module.exports = async function(callback) {
     try {
-        const contractRegistryAddress = JSON.parse(fs.readFileSync("./driverOptions.json")).contractRegistryForExistingContractsAddress;
-        const contractRegistryABI = JSON.parse(fs.readFileSync("./node_modules/@orbs-network/orbs-ethereum-contracts-v2/release/abi/ContractRegistry.abi"));
-        cntr.contractRegistry = new web3.eth.Contract(contractRegistryABI, contractRegistryAddress);
-
+        cntr.contractRegistry = new web3.eth.Contract(contractRegistryAbi, contractRegistryAddress);
         const delegationsContractAddress = await callWithRetry(cntr.contractRegistry.methods.getContract('delegations'));
-        const delegationsContractABI = JSON.parse(fs.readFileSync("./node_modules/@orbs-network/orbs-ethereum-contracts-v2/release/abi/IDelegations.abi"));
-        cntr.delegations = new web3.eth.Contract(delegationsContractABI, delegationsContractAddress);
 
-        const stakingContractAddress = "0x01D59Af68E2dcb44e04C50e05F62E7043F2656C3";
-        const stakingContractABI = JSON.parse(fs.readFileSync("./node_modules/@orbs-network/orbs-ethereum-contracts-v2/release/abi/IStakingContract.abi"));
-        cntr.staking = new web3.eth.Contract(stakingContractABI, stakingContractAddress);
-
-        const v1DelegationsContractAddress = "0x30f855afb78758Aa4C2dc706fb0fA3A98c865d2d";
-        const v1DelegationsContractABI = JSON.parse("[{\"constant\":true,\"inputs\":[{\"name\":\"delegator\",\"type\":\"address\"}],\"name\":\"getCurrentDelegation\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"to\",\"type\":\"address\"}],\"name\":\"delegate\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[],\"name\":\"undelegate\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"guardian\",\"type\":\"address\"}],\"name\":\"getCurrentVote\",\"outputs\":[{\"name\":\"validators\",\"type\":\"address[]\"},{\"name\":\"blockNumber\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"maxVoteOutCount\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"guardian\",\"type\":\"address\"}],\"name\":\"getCurrentVoteBytes20\",\"outputs\":[{\"name\":\"validatorsBytes20\",\"type\":\"bytes20[]\"},{\"name\":\"blockNumber\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"validators\",\"type\":\"address[]\"}],\"name\":\"voteOut\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"VERSION\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"name\":\"maxVoteOutCount_\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"name\":\"voter\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"validators\",\"type\":\"address[]\"},{\"indexed\":false,\"name\":\"voteCounter\",\"type\":\"uint256\"}],\"name\":\"VoteOut\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"name\":\"delegator\",\"type\":\"address\"},{\"indexed\":true,\"name\":\"to\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"delegationCounter\",\"type\":\"uint256\"}],\"name\":\"Delegate\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"name\":\"delegator\",\"type\":\"address\"},{\"indexed\":false,\"name\":\"delegationCounter\",\"type\":\"uint256\"}],\"name\":\"Undelegate\",\"type\":\"event\"}]");
-        cntr.v1Delegations = new web3.eth.Contract(v1DelegationsContractABI, v1DelegationsContractAddress);
-
-        const guardiansMigrationV1V2ContractAddress = "0xd2abc20b2a7bfdf4c7e126a669d2c43293845c7d";
-        const guardiansMigrationV1V2ABI = JSON.parse("[{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"oldGuardianAddress\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newGuardianAddress\",\"type\":\"address\"}],\"name\":\"GuardianAddressMigrationRecorded\",\"type\":\"event\"},{\"constant\":false,\"inputs\":[{\"internalType\":\"address\",\"name\":\"newAddress\",\"type\":\"address\"}],\"name\":\"setNewGuardianAddress\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"internalType\":\"address\",\"name\":\"oldAddress\",\"type\":\"address\"}],\"name\":\"getGuardianV2Address\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"newAddress\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"internalType\":\"address[]\",\"name\":\"oldAddresses\",\"type\":\"address[]\"}],\"name\":\"getGuardiansV2AddressBatch\",\"outputs\":[{\"internalType\":\"address[]\",\"name\":\"newAddresses\",\"type\":\"address[]\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"}]");
-        cntr.guardiansMigration = new web3.eth.Contract(guardiansMigrationV1V2ABI, guardiansMigrationV1V2ContractAddress);
+        cntr.delegations = new web3.eth.Contract(delegationsContractAbi, delegationsContractAddress);
+        cntr.staking = new web3.eth.Contract(stakingContractAbi, stakingContractAddress);
+        cntr.stakingAbi = stakingContractAbi;
+        cntr.v1Delegations = new web3.eth.Contract(v1DelegationsContractAbi, v1DelegationsContractAddress);
+        cntr.guardiansMigration = new web3.eth.Contract(guardiansMigrationV1V2Abi, guardiansMigrationV1V2ContractAddress);
 
         await migrate();
     } catch (e) {
@@ -50,23 +78,28 @@ async function loadMigrationSnapshot() {
     // populate migration op arrays
     const importDelegations = [];
     const refreshStake = [];
-    const refreshStakeNotifications = [];
+
+    // initialize team wallet delegation:
+    importDelegations.push({from: TEAM_WALLET_ADDRESS, to: VOID_DELEGATION});
+
+    // first topic is the from address
+    const implicitDelegations = [];
 
     for (let s of stakers) {
         const op = await _checkDelegator(s, identityMigration);
-        if (op && op.importDelegations) {
+        if (op.importDelegations) {
             importDelegations.push(op.importDelegations);
-            if (!refreshStakeNotifications.includes(op.importDelegations.to)) {
-                refreshStakeNotifications.push(op.importDelegations.to);
+            if (!refreshStake.includes(op.importDelegations.to)) {
+                refreshStake.push(op.importDelegations.to);
             }
         }
-        if (op && op.refreshStake) {
+        if (op.refreshStake) {
             refreshStake.push(op.refreshStake);
         }
         console.log('processed', s);
     }
 
-    const snapshot = {importDelegations, refreshStake, refreshStakeNotifications};
+    const snapshot = {importDelegations, refreshStake};
     if (fs.existsSync(snapshotFilename)) {
         fs.unlinkSync(snapshotFilename);
     }
@@ -81,7 +114,7 @@ async function migrate() {
     }
     const startTime = new Date().getTime();
 
-    const {importDelegations, refreshStake, refreshStakeNotifications} = await loadMigrationSnapshot();
+    const {importDelegations, refreshStake} = await loadMigrationSnapshot();
 
     const batched = await _batchAndOptimizeImportDelegations(importDelegations, migrationManager);
 
@@ -93,18 +126,11 @@ async function migrate() {
         console.log(`Delegations.importDelegations(${JSON.stringify(b.from)}, ${JSON.stringify(b.to)}, false)`);
     }
 
-    // refreshStakeNotification transactions
-    for (const addr of refreshStakeNotifications) {
-        const gas = await cntr.delegations.methods.refreshStakeNotification(addr).estimateGas();
-        gasEstimates.push({gas, method: "refreshStakeNotification"});
-        console.log(`Delegations.refreshStakeNotification(${addr})`);
-    }
-
     // refresh stake transactions
     for (const r of refreshStake) {
-        const gas = await cntr.delegations.methods.refreshStake(r.addr).estimateGas();
+        const gas = await cntr.delegations.methods.refreshStake(r).estimateGas();
         gasEstimates.push({gas, method: "refreshStake"});
-        console.log(`Delegations.refreshStake(${r.addr})`);
+        console.log(`Delegations.refreshStake(${r})`);
 
         // TODO remove
         throw "This should not happen as long as we use importDelegations instead";
@@ -138,34 +164,23 @@ async function migrate() {
 
 async function _populateStakersAndIdentityMigration() {
 
-    const events = await getPastEventsFromMainnet(staking);
+    const events = await getPastEventsFromMainnet(stakingContractAbi, stakingContractAddress, "Staked");
     const unique = {};
     events.map(e => {
-        if (!stakersBlacklist.includes(e.returnValues.stakeOwner)) {
-            unique[e.returnValues.stakeOwner] = true;
+        if (!stakersBlacklist.includes(e.stakeOwner)) {
+            unique[e.stakeOwner] = true;
         }
     });
 
     const stakers = Object.keys(unique);
-    let identityMigration = {};
 
-    // if (hasGuardianMigrations) {
-        identityMigration = await callWithRetry(cntr.guardiansMigration.getGuardiansV2AddressBatch(stakers))
-            .reduce((m, newAddress, i)=> {
-                m[stakers[i]] = newAddress;
-                return m
-                },
-            {});
-    // } else {
-    //     identityMigration = stakers
-    //         .reduce((m, newAddress)=> {
-    //                 m[newAddress] = newAddress;
-    //                 return m
-    //             },
-    //         {});
-    // }
+    const identityMigration = (await callWithRetry(cntr.guardiansMigration.methods.getGuardiansV2AddressBatch(stakers)))
+        .reduce((m, newAddress, i)=> {
+            m[stakers[i]] = newAddress;
+            return m
+            },
+        {});
     return {stakers, identityMigration};
-
 }
 
 async function _checkDelegator(delegator, delegatesMigratedIdentity) {
@@ -173,11 +188,17 @@ async function _checkDelegator(delegator, delegatesMigratedIdentity) {
 
     let v1DelegationV1Identity = await callWithRetry(cntr.v1Delegations.methods.getCurrentDelegation(delegator));
     if (v1DelegationV1Identity === "0x0000000000000000000000000000000000000000") {
-        v1DelegationV1Identity = delegator;
+        const implicitDelegation = (await getPastEventsFromMainnet([transferEventAbi], orbsTokenAddress, 'Transfer', [`0x${'0'.repeat(24)}${delegator.slice(2)}`]))
+            .filter(t => t.value === '70000000000000000' ).pop();
+        if (implicitDelegation) {
+            v1DelegationV1Identity = implicitDelegation.to;
+        } else {
+            v1DelegationV1Identity = delegator;
+        }
     }
     const v1Delegation = delegatesMigratedIdentity[v1DelegationV1Identity] || v1DelegationV1Identity;
 
-    if (v1Delegation !== v2Delegation) {
+    if (v1Delegation !== v2Delegation && v1Delegation != delegator) { // we don't do self delegations!!
         return {
             importDelegations: {from: delegator, to: v1Delegation}
         };
@@ -185,31 +206,34 @@ async function _checkDelegator(delegator, delegatesMigratedIdentity) {
 
     // if we dont import delegations check if need to update stake:
     let scb = await callWithRetry(cntr.staking.methods.getStakeBalanceOf(delegator));
-    let dcb = await callWithRetry(cntr.delegations.methods.getDelegatedStakes(delegator));
+    let dcb = await callWithRetry(cntr.delegations.methods.getDelegatedStake(delegator));
 
     if (dcb !== scb) {
         return {
-            refreshStake: {addr: delegator}
+            refreshStake: delegator
         }
     }
+    return {}
 }
 
 async function _batchImportDelegationTransactions(sorted, batchSize, migrationOwner) {
 
-    const batched = sorted.reduce((batchedArr, delegationItem, i)=>{
-        const bi = Math.trunc(i / batchSize);
-        batchedArr[bi] = batchedArr[bi] || {from: [], to: [], len: 0};
-        batchedArr[bi].to.push(delegationItem.to);
-        batchedArr[bi].from.push(delegationItem.from);
-        batchedArr[bi].len++;
+    const batches = sorted.reduce((batchedArr, delegationItem)=>{
+        const prevBatch = batchedArr.length ? batchedArr[batchedArr.length - 1] : undefined;
+        if (prevBatch === undefined || prevBatch.len >= batchSize || prevBatch.to !== delegationItem.to) {
+            batchedArr.push({from: [], to: delegationItem.to, len: 0})
+        }
+        const currentBatch = batchedArr[batchedArr.length - 1];
+        currentBatch.from.push(delegationItem.from);
+        currentBatch.len++;
         return batchedArr;
     }, []);
 
     console.log(`splitting to batches of ${batchSize}`);
 
     // gas estimate that batches are small enough to pass
-    for (const i in batched) {
-        const b = batched[i];
+    for (const i in batches) {
+        const b = batches[i];
         try{
             const gas = await cntr.delegations.methods.importDelegations(b.from, b.to, false).estimateGas({from: migrationOwner});
 
@@ -231,7 +255,7 @@ async function _batchImportDelegationTransactions(sorted, batchSize, migrationOw
         }
     }
 
-    return batched;
+    return batches;
 }
 
 async function _batchAndOptimizeImportDelegations(importDelegations, migrationOwner) {
@@ -336,8 +360,7 @@ async function promptFileLoad() {
                     rl.close();
                     break;
                 default:
-
-                    rl.question(query, confirmCallback);
+                    rl.question(queryString, confirmCallback);
             }
         };
         rl.question(queryString, confirmCallback);

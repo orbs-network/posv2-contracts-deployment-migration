@@ -69,7 +69,7 @@ Notice, that as soon as you start ganache the forked block is hardened. If you a
 archive node at some point (a few minutes) your node no longer be able to serve state queries
 and it will be required to restart ganache. use `restart-ganache` in this case. 
 
-Deploy PoS contracts. You may run this script only once if you are developing the migration logic 
+Deploy PoS contracts. This part takes a couple of minutes, so you may run this script only once if you are developing and testing just the migration logic 
 ```shell script
 npm run deploy-local
 ```
