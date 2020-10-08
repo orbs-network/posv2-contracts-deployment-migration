@@ -348,7 +348,7 @@ async function _splitAndVerifyGasLimits(sorted, maxBatchSize, migrationOwner) {
 }
 
 function _splitBatches(sorted, maxBatchSize) {
-    const batches = sorted.reduce((batchedArr, delegationItem) => {
+    return sorted.reduce((batchedArr, delegationItem) => {
         const prevBatch = batchedArr.length ? batchedArr[batchedArr.length - 1] : undefined;
         if (prevBatch === undefined || prevBatch.len >= maxBatchSize || prevBatch.to !== delegationItem.to) {
             batchedArr.push({from: [], to: delegationItem.to, len: 0})
@@ -358,7 +358,6 @@ function _splitBatches(sorted, maxBatchSize) {
         currentBatch.len++;
         return batchedArr;
     }, []);
-    return batches;
 }
 
 async function callWithRetry(method, options) {
