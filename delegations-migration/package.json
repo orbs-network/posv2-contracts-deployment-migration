@@ -1,0 +1,25 @@
+{
+  "name": "orbs-v1-v2-delegations-migration",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "pretest": "npm run stop-ganache 2> /dev/null ; npm run start-ganache && sleep 7",
+    "test": "npm run deploy-local && npm run migrate-local",
+    "deploy-local": "export GAS_LIMIT=6721974 && export ETHEREUM_MNEMONIC=\"$(cat ../.secret)\" && truffle exec scripts/deployContracts.js --network development",
+    "migrate-local": "truffle exec scripts/migrate.js  --network development",
+    "migrate-mainnet": "truffle exec scripts/migrate.js --netowrk mainnet",
+    "start-ganache": "ganache-cli -v -m \"$(cat ../.secret)\" -p 7545 --fork https://mainnet.infura.io/v3/48fb0d9baafd4e28aa34f95d75f6d4ce & echo $! > .ganache_pid",
+    "stop-ganache": "kill $(cat .ganache_pid) ; rm .ganache_pid"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@orbs-network/orbs-ethereum-contracts-v2": "0.0.25",
+    "@truffle/hdwallet-provider": "^1.0.43",
+    "ganache-cli": "^6.11.0",
+    "ganache-core": "^2.11.2",
+    "truffle": "^5.1.42",
+    "web3": "^1.3.0"
+  }
+}

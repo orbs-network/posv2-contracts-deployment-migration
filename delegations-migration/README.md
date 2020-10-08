@@ -50,7 +50,7 @@ Between activation of the migration script you may edit the snapshot file to rem
 
 ## Testing
 
-Place a mnemonic in a file called `.secret`. For testing it can be any mnemonic.
+Place a mnemonic in a file called `.secret` at the monorepo root. For testing it can be any mnemonic.
 
 run ganache. this forks off from Ethereum state, you may need to replace the infura api key in package.json to a valid api key:
 ```shell script
@@ -59,7 +59,7 @@ npm run test
 
 ## Dev
 
-Place a mnemonic in a file called `.secret`. For dev it can be any mnemonic.
+Place a mnemonic in a file called `.secret` at the monorepo root. For dev it can be any mnemonic.
 
 run ganache. this forks off from Ethereum state, you may need to replace the infura api key in package.json to a valid api key:
 ```shell script
@@ -74,7 +74,7 @@ Deploy PoS contracts. This part takes a couple of minutes, so you may run this s
 npm run deploy-local
 ```
 
-This will create a new file called `driverOptions.json` with the address of the newly deployed contractRegistry contract on ganache.
+This will create a new file called `deployed-contracts.json` with the address of the newly deployed contractRegistry contract on ganache.
 
 Run migration 
 ```shell script

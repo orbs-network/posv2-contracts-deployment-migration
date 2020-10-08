@@ -1,5 +1,5 @@
 node_modules
+
+deployed-contracts.json
 .secret
 .ganache_pid
-driverOptions.json
-migrationSnapshot.json

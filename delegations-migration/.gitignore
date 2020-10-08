@@ -1,0 +1,5 @@
+node_modules
+.secret
+.ganache_pid
+deployed-contracts.json
+migrationSnapshot.json

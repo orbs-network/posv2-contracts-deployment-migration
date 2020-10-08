@@ -14,9 +14,9 @@ const DEV_TEST_ADDRESS    = "0x553C3781677a2185d4ea9C8EEFBE971F03ad1417";
 const stakersBlacklist    = [DEV_TEST_ADDRESS, TEAM_WALLET_ADDRESS];
 
 // contracts
-const contractRegistryAddress = JSON.parse(fs.readFileSync("../driverOptions.json")).contractRegistryForExistingContractsAddress;
+const contractRegistryAddress = JSON.parse(fs.readFileSync("../deployed-contracts.json")).contractRegistry;
 const contractRegistryAbi = JSON.parse(fs.readFileSync("../node_modules/@orbs-network/orbs-ethereum-contracts-v2/release/abi/ContractRegistry.abi"));
-const delegationsContractAbi = JSON.parse(fs.readFileSync("../node_modules/@orbs-network/orbs-ethereum-contracts-v2/release/abi/IDelegations.abi"));
+const delegationsContractAbi = JSON.parse(fs.readFileSync("../node_modules/@orbs-network/orbs-ethereum-contracts-v2/release/abi/Delegations.abi"));
 const stakingContractAddress = "0x01D59Af68E2dcb44e04C50e05F62E7043F2656C3";
 const stakingContractAbi = JSON.parse(fs.readFileSync("../node_modules/@orbs-network/orbs-ethereum-contracts-v2/release/abi/IStakingContract.abi"));
 const v1DelegationsContractAddress = "0x30f855afb78758Aa4C2dc706fb0fA3A98c865d2d";
@@ -51,14 +51,14 @@ async function initContractGlobals() {
 }
 
 async function migrate() {
-    const migrationManager = await determineMigrationManager();
+    const initializationAdmin = await determineInitializationAdmin();
 
     // this may take a few minutes if the user chooses to build a new snapshot
     const {importDelegations, refreshStake} = await loadMigrationSnapshot();
 
-    const batched = await splitBatches(importDelegations, migrationManager);
+    const batched = await splitBatches(importDelegations, initializationAdmin);
 
-    const { totalGas, maxGas } = await estimateGasUsage(batched, refreshStake, migrationManager);
+    const { totalGas, maxGas } = await estimateGasUsage(batched, refreshStake, initializationAdmin);
 
     // prompt summary
     const gasPriceSuggest = await web3.eth.getGasPrice();
@@ -95,12 +95,12 @@ async function migrate() {
     const txOpts = {
         gas: Math.min(6000000, 2 * maxGas),
         gasPrice: gasPriceGwei,
-        from: migrationManager
+        from: initializationAdmin
     };
 
     for (const b of batched) {
         console.log(`Delegations.importDelegations(${JSON.stringify(b.from)}, ${JSON.stringify(b.to)})!`);
-        promises.push(_sendOneTx(cnts.delegations.methods.importDelegations(b.from, b.to, false), txOpts, txCount++));
+        promises.push(_sendOneTx(cnts.delegations.methods.importDelegations(b.from, b.to), txOpts, txCount++));
     }
 
     // refresh stake transactions
@@ -133,31 +133,31 @@ function _sendOneTx(methodObj, txOpts, i) {
     });
 }
 
-async function determineMigrationManager() {
-    const migrationManager = await callWithRetry(cnts.contractRegistry.methods.getManager("migrationManager"));
+async function determineInitializationAdmin() {
+    const initialzationAdmin = await callWithRetry(cnts.delegations.methods.initializationAdmin());
 
-    // verify we can sign as migrationManager
-    if (!(await web3.eth.getAccounts()).includes(migrationManager)) {
-        throw "migrationManager is not a known account. Check mnemonic and retry...";
+    // verify we can sign as initializationAdmin
+    if (!(await web3.eth.getAccounts()).includes(initialzationAdmin)) {
+        throw new Error(`initializationAdmin (${initialzationAdmin}) is not a known account. Check mnemonic and retry...`);
     }
 
-    return migrationManager;
+    return initialzationAdmin;
 }
 
-async function estimateGasUsage(importDelegatinosBatched, refreshStake, migrationManager) {
+async function estimateGasUsage(importDelegatinosBatched, refreshStake, initializationAdmin) {
     const gasEstimates = [];
 
     // import delegation transactions
     for (const b of importDelegatinosBatched) {
         console.log(`Delegations.importDelegations(${JSON.stringify(b.from)}, ${JSON.stringify(b.to)})...`);
-        const gas = await cnts.delegations.methods.importDelegations(b.from, b.to, false).estimateGas({from: migrationManager});
+        const gas = await cnts.delegations.methods.importDelegations(b.from, b.to).estimateGas({from: initializationAdmin});
         gasEstimates.push({gas, method: "importDelegations"});
     }
 
     // refresh stake transactions
     for (const r of refreshStake) {
         console.log(`Delegations.refreshStake(${r.for}) // (${r.cause})...`);
-        const gas = await cnts.delegations.methods.refreshStake(r.for).estimateGas({from: migrationManager});
+        const gas = await cnts.delegations.methods.refreshStake(r.for).estimateGas({from: initializationAdmin});
         gasEstimates.push({gas, method: "refreshStake"});
     }
     console.log(JSON.stringify(gasEstimates, null, 2));
@@ -305,7 +305,7 @@ function _translateGuardianIdentity(delegatesMigratedIdentity, v1DelegationV1Ide
     return delegatesMigratedIdentity[v1DelegationV1Identity] || v1DelegationV1Identity;
 }
 
-async function splitBatches(importDelegations, migrationOwner) {
+async function splitBatches(importDelegations, initializationAdmin) {
     if (!importDelegations || !importDelegations.length) {
         return [];
     }
@@ -318,10 +318,10 @@ async function splitBatches(importDelegations, migrationOwner) {
         return 0;
     } );
 
-    return await _splitAndVerifyGasLimits(sorted, maxBatchSize, migrationOwner);
+    return await _splitAndVerifyGasLimits(sorted, maxBatchSize, initializationAdmin);
 }
 
-async function _splitAndVerifyGasLimits(sorted, maxBatchSize, migrationOwner) {
+async function _splitAndVerifyGasLimits(sorted, maxBatchSize, initializationAdmin) {
 
     console.log(`splitting to batches up to ${maxBatchSize}`);
     const batches = _splitBatches(sorted, maxBatchSize);
@@ -330,11 +330,11 @@ async function _splitAndVerifyGasLimits(sorted, maxBatchSize, migrationOwner) {
     for (const i in batches) {
         const b = batches[i];
         try{
-            const gas = await cnts.delegations.methods.importDelegations(b.from, b.to, false).estimateGas({from: migrationOwner});
+            const gas = await cnts.delegations.methods.importDelegations(b.from, b.to).estimateGas({from: initializationAdmin});
 
             if (gas > gasLimitTx) {
                 console.log(`gas cost: ${gas} for importDelegations(${JSON.stringify(b.from)}, ${JSON.stringify(b.to)})`);
-                throw "transaction exceeds gas limit"
+                throw new Error("transaction exceeds gas limit")
             }
             console.log(`batch ${i} size ${b.len} delegates to ${b.to}. gas estimate passed`)
         } catch (e) {
