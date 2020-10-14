@@ -7,9 +7,10 @@
     "build-delegations-migration": "cd delegations-migration && npm install",
     "build-contract-deployment": "cd contract-deployment && npm install",
     "build": "npm run build-delegations-migration && npm run build-contract-deployment",
-    "deploy-contracts": "export GAS_LIMIT=6721974 && cd contract-deployment && npm run deploy-contracts -- ../delegations-migration/deployed-contracts.json",
-    "migrate-delegations": "cd delegations-migration && npm run migrate-local",
-    "deploy-full": "npm run deploy-contracts  && npm run migrate",
+    "deploy-contracts": "cd contract-deployment && npm run deploy-contracts -- -o ../deployed-contracts.json",
+    "migrate-delegations-local": "cd delegations-migration && npm run migrate-local",
+    "migrate-delegations-mainnet": "cd delegations-migration && npm run migrate-mainnet",
+    "finalize-deployment": "cd contract-deployment && npm run finalize-deployment",
     "start-ganache": "ganache-cli -v -m \"$(cat .secret)\" -p 7545 --fork https://mainnet.infura.io/v3/48fb0d9baafd4e28aa34f95d75f6d4ce & echo $! > .ganache_pid",
     "stop-ganache": "kill $(cat .ganache_pid) ; rm .ganache_pid",
     "test": "echo \"Error: no test specified\" && exit 1"

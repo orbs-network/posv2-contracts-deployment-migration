@@ -14,7 +14,7 @@ const DEV_TEST_ADDRESS    = "0x553C3781677a2185d4ea9C8EEFBE971F03ad1417";
 const stakersBlacklist    = [DEV_TEST_ADDRESS, TEAM_WALLET_ADDRESS];
 
 // contracts
-const contractRegistryAddress = JSON.parse(fs.readFileSync("../deployed-contracts.json")).contractRegistry;
+const contractRegistryAddress = JSON.parse(fs.readFileSync("../../deployed-contracts.json")).contractRegistry;
 const contractRegistryAbi = JSON.parse(fs.readFileSync("../node_modules/@orbs-network/orbs-ethereum-contracts-v2/release/abi/ContractRegistry.abi"));
 const delegationsContractAbi = JSON.parse(fs.readFileSync("../node_modules/@orbs-network/orbs-ethereum-contracts-v2/release/abi/Delegations.abi"));
 const stakingContractAddress = "0x01D59Af68E2dcb44e04C50e05F62E7043F2656C3";

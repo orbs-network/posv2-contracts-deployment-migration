@@ -27,11 +27,11 @@ module.exports = async function(callback) {
 
         console.log(`Deployed new PoS contracts, contract registry is ${d.contractRegistry.address}`);
 
-        fs.writeFileSync('./deployed-contracts.json', JSON.stringify({
+        fs.writeFileSync('../deployed-contracts.json', JSON.stringify({
             contractRegistry: d.contractRegistry.address,
         }, null, 2));
 
-        console.log('overriding driver options file for migration test:', JSON.parse(fs.readFileSync("deployed-contracts.json")));
+        console.log('overriding driver options file for migration test:', JSON.parse(fs.readFileSync("../deployed-contracts.json")));
     } catch (e) {
         console.error("failed deploying PoS contracts");
         console.error(e)

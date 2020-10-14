@@ -23,7 +23,7 @@ const HDWalletProvider = require('@truffle/hdwallet-provider');
 //
 const fs = require('fs');
 const defaultMnemonic = process.env.ETHEREUM_MNEMONIC || "vanish junk genuine web seminar cook absurd royal ability series taste method identify elevator liquid";
-const mnemonic = fs.existsSync(".secret") ? fs.readFileSync(".secret").toString().trim() : defaultMnemonic;
+const mnemonic = fs.existsSync("../.secret") ? fs.readFileSync("../.secret").toString().trim() : defaultMnemonic;
 const ethereumMainnetUrl = process.env.ETHEREUM_URL || `https://mainnet.infura.io/v3/48fb0d9baafd4e28aa34f95d75f6d4ce`;
 
 module.exports = {
