@@ -70,12 +70,7 @@ async function migrate() {
     console.log(`Estimated total gas is ${totalGas}, with the max tx consuming ${maxGas}.`);
     console.log(`Gas price is ${gasPriceSuggestGwei} (gwei), estimated costs are ${totalPriceEth} ETH`);
 
-    const {proceed, gasPriceGwei} = await promptGasPriceGwei(Math.trunc(gasPriceSuggestGwei));
-
-    if (!proceed) {
-        console.log('Aborting..');
-        return;
-    }
+    const gasPriceGwei = await promptGasPriceGwei(Math.trunc(gasPriceSuggestGwei));
 
     console.log('\n\n\n');
     console.log('------------------------------------------------------------------------');
@@ -99,7 +94,7 @@ async function migrate() {
     };
 
     console.log('sending transactions with options:\n', JSON.stringify(txOpts, null, 2));
-    const ok = await promptOk('final confirmation?');
+    const ok = await promptOk('Proceed with migration?');
     if (!ok) {
         console.log('Aborting..');
         return;

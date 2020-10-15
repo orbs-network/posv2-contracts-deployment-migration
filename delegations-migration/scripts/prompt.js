@@ -12,34 +12,11 @@ async function promptGasPriceGwei(gasPriceSuggestGwei) {
             const newPrice = parseInt(answer);
 
             if (answer === "") { // default selected
-                rl.question("Proceed with migration? [Yes/No] ", confirmCallback);
-
+                resolutionFunc(gasPrice);
             } else if (isNaN(newPrice) || newPrice <= 0) { // invalid
-
                 rl.question(`Please specify a positive integer.\nOverride gas price? [${gasPrice}] `, gasPriceCallback);
-
             } else { // overriden
-
-                gasPrice = newPrice;
-                rl.question("Proceed with migration? [Yes/No] ", confirmCallback);
-
-            }
-        };
-
-        const confirmCallback = function (answer) {
-            switch (answer.toLowerCase()) {
-                case "yes":
-                case "y":
-                    resolutionFunc({proceed: true, gasPriceGwei: gasPrice});
-                    rl.close();
-                    break;
-                case "no":
-                case "n":
-                    resolutionFunc({proceed: false, gasPriceGwei: gasPrice});
-                    rl.close();
-                    break;
-                default:
-                    rl.question("Proceed with migration? [Yes/No] ", confirmCallback);
+                resolutionFunc(gasPrice);
             }
         };
         rl.question(`Override gas price? [${gasPrice}] `, gasPriceCallback);
@@ -68,7 +45,7 @@ async function promptSkipTx(txIndex, desc) {
     throw "Unexpected prompt option";
 }
 
-async function promptOk() {
+async function promptOk(questionString) {
     const choice = await promptOptions(questionString, ["Ok", "Cancel"]);
     if (choice === 'Ok') {
         return true;
