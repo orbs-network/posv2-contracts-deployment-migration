@@ -1,11 +1,10 @@
 const fs = require('fs');
 const { getPastEventsFromMainnet } = require('./mainnet_event_fetcher');
-const { promptGasPriceGwei, promptFileLoad, promptOk } = require("./prompt");
+const { promptGasPriceGwei, promptFileLoad, promptSkipTx , promptOk } = require("./prompt");
 
 const snapshotFilename = "./migrationSnapshot.json";
 
 const maxBatchSize = 100;
-const gasLimitTx = 10000000;
 
 // addresses used internally by dev are not migrated
 const TEAM_WALLET_ADDRESS = "0xC200f98F3C088B868D80d8eb0aeb9D7eE18d604B";
@@ -85,10 +84,10 @@ async function migrate() {
     console.log('\n\n\n');
 
     // import delegation transactions
-    let txCount = 1;
+    let txCount = 0;
     const promises = [];
     const txOpts = {
-        gas: Math.min(6000000, 2 * maxGas),
+        gas: 6000000,
         gasPrice: web3.utils.toWei(web3.utils.toBN(gasPriceGwei), 'gwei'),
         from: initializationAdmin
     };
@@ -100,28 +99,37 @@ async function migrate() {
         return;
     }
 
+    console.log('about to send importDelegations:\n', JSON.stringify(batched, null, 2));
+
     for (const b of batched) {
-        console.log(`Delegations.importDelegations(${JSON.stringify(b.from)}, ${JSON.stringify(b.to)})!`);
-        promises.push(_sendOneTx(cnts.delegations.methods.importDelegations(b.from, b.to), txOpts, txCount++));
+        txCount++;
+        if (await promptSkipTx(txCount, `Delegations.importDelegations(${JSON.stringify(b.from)}, ${JSON.stringify(b.to)})`)) {
+            promises.push(_sendOneTx(cnts.delegations.methods.importDelegations(b.from, b.to), txOpts, txCount));
+        }
     }
+
+    console.log('about to send refreshStake:\n', JSON.stringify(refreshStake, null ,2));
 
     // refresh stake transactions
     for (const r of refreshStake) {
-        console.log(`Delegations.refreshStake(${r.for})!`);
-        promises.push(_sendOneTx(cnts.delegations.methods.refreshStake(r.for), txOpts, txCount++));
+        txCount++;
+        if (await promptSkipTx(txCount, `Delegations.refreshStake(${r.for})`)) {
+            promises.push(_sendOneTx(cnts.delegations.methods.refreshStake(r.for), txOpts, txCount));
+        }
     }
     await Promise.all(promises);
 }
 
 function _sendOneTx(methodObj, txOpts, i) {
+    txOpts = Object.assign({}, txOpts);
     return new Promise((resolve, reject) => {
         methodObj.send(txOpts)
             .on('transactionHash', function (hash) {
                 console.log(`[${i}]`, 'hash', hash);
             })
             .on('confirmation', function (confirmationNumber, receipt) {
-                console.log(`[${i}]`, 'confirmation', receipt.transactionHash, confirmationNumber);
-                if (confirmationNumber > 6) {
+                if (confirmationNumber == 6) {
+                    console.log(`[${i}]`, 'confirmation', receipt.transactionHash, confirmationNumber);
                     resolve(receipt);
                 }
             })
@@ -240,7 +248,7 @@ async function _checkV1Delegations(delegator, delegatesMigratedIdentity) {
 
 async function _appendToSnapshot(delegator, delegatesMigratedIdentity, snapshot) {
 
-    const v1DelegationsDesc = await _checkV1Delegations(delegator, snapshot.importDelegations, delegatesMigratedIdentity);
+    const v1DelegationsDesc = await _checkV1Delegations(delegator, delegatesMigratedIdentity);
 
     const v2Delegation = await callWithRetry(cnts.delegations.methods.getDelegation(delegator));
     if (v1DelegationsDesc.to && // there was any delegation
@@ -327,24 +335,6 @@ async function _splitAndVerifyGasLimits(sorted, maxBatchSize, initializationAdmi
 
     console.log(`splitting to batches up to ${maxBatchSize}`);
     const batches = _splitBatches(sorted, maxBatchSize);
-
-    // gas estimate that batches are small enough to pass
-    for (const i in batches) {
-        const b = batches[i];
-        try{
-            const gas = await cnts.delegations.methods.importDelegations(b.from, b.to).estimateGas({from: initializationAdmin});
-
-            if (gas > gasLimitTx) {
-                console.log(`gas cost: ${gas} for importDelegations(${JSON.stringify(b.from)}, ${JSON.stringify(b.to)})`);
-                throw new Error("transaction exceeds gas limit")
-            }
-            console.log(`batch ${i} size ${b.len} delegates to ${b.to}. gas estimate passed`)
-        } catch (e) {
-            console.log(`gas estimation failed: ${JSON.stringify(e)}`);
-            console.log(`failed to estimate gas for: importDelegations(${JSON.stringify(b.from)}, ${JSON.stringify(b.to)})`);
-            throw e;
-        }
-    }
 
     return batches;
 }
