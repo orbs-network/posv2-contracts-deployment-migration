@@ -127,7 +127,7 @@ function _sendOneTx(methodObj, txOpts, i) {
                 console.log(`[${i}]`, 'receipt', receipt.transactionHash, `gas: ${receipt.gasUsed}`, `block: ${receipt.blockNumber}`);
             })
             .on('error', function (error, receipt) { // If the transaction was rejected by the network with a receipt, the second parameter will be the receipt.
-                console.log(`[${i}]`, 'error', receipt.transactionHash, error);
+                console.log(`[${i}]`, 'error:', error, 'receipt:', JSON.stringify(receipt));
                 reject(receipt);
             });
     });
