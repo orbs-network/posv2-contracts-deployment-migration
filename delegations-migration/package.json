@@ -15,7 +15,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@orbs-network/orbs-ethereum-contracts-v2": "0.0.30",
+    "@orbs-network/orbs-ethereum-contracts-v2": "0.0.31",
     "@truffle/hdwallet-provider": "^1.0.43",
     "ganache-cli": "^6.11.0",
     "ganache-core": "^2.11.2",
