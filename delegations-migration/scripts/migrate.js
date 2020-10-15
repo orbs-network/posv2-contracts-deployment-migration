@@ -98,6 +98,8 @@ async function migrate() {
         from: initializationAdmin
     };
 
+    console.log('sending transactions with options:\n', JSON.stringify(txOpts, null, 2));
+
     for (const b of batched) {
         console.log(`Delegations.importDelegations(${JSON.stringify(b.from)}, ${JSON.stringify(b.to)})!`);
         promises.push(_sendOneTx(cnts.delegations.methods.importDelegations(b.from, b.to), txOpts, txCount++));
