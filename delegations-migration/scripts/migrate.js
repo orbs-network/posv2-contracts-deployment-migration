@@ -1,8 +1,6 @@
-import {promptOk} from "./prompt";
-
 const fs = require('fs');
 const { getPastEventsFromMainnet } = require('./mainnet_event_fetcher');
-const { promptGasPriceGwei, promptFileLoad } = require("./prompt");
+const { promptGasPriceGwei, promptFileLoad, promptOk } = require("./prompt");
 
 const snapshotFilename = "./migrationSnapshot.json";
 
