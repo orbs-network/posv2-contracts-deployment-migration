@@ -68,6 +68,18 @@ async function promptSkipTx(txIndex, desc) {
     throw "Unexpected prompt option";
 }
 
+async function promptOk() {
+    const choice = await promptOptions(questionString, ["Ok", "Cancel"]);
+    if (choice === 'Ok') {
+        return true;
+    }
+    if (choice === 'Cancel') {
+        return false;
+    }
+    throw "Unexpected prompt option";
+}
+
+
 async function promptOptions(questionString, options) {
     const rl = readline.createInterface({
         input: process.stdin,
@@ -93,5 +105,6 @@ async function promptOptions(questionString, options) {
 module.exports = {
     promptGasPriceGwei,
     promptFileLoad,
-    promptSkipTx
+    promptSkipTx,
+    promptOk
 };

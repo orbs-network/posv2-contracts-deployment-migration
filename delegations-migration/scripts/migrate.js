@@ -1,3 +1,5 @@
+import {promptOk} from "./prompt";
+
 const fs = require('fs');
 const { getPastEventsFromMainnet } = require('./mainnet_event_fetcher');
 const { promptGasPriceGwei, promptFileLoad } = require("./prompt");
@@ -94,11 +96,16 @@ async function migrate() {
     const promises = [];
     const txOpts = {
         gas: Math.min(6000000, 2 * maxGas),
-        gasPrice: gasPriceGwei,
+        gasPrice: web3.utils.toWei(web3.utils.toBN(gasPriceGwei), 'gwei'),
         from: initializationAdmin
     };
 
     console.log('sending transactions with options:\n', JSON.stringify(txOpts, null, 2));
+    const ok = await promptOk('final confirmation?');
+    if (!ok) {
+        console.log('Aborting..');
+        return;
+    }
 
     for (const b of batched) {
         console.log(`Delegations.importDelegations(${JSON.stringify(b.from)}, ${JSON.stringify(b.to)})!`);
