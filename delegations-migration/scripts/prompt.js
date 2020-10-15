@@ -16,7 +16,7 @@ async function promptGasPriceGwei(gasPriceSuggestGwei) {
             } else if (isNaN(newPrice) || newPrice <= 0) { // invalid
                 rl.question(`Please specify a positive integer.\nOverride gas price? [${gasPrice}] `, gasPriceCallback);
             } else { // overriden
-                resolutionFunc(gasPrice);
+                resolutionFunc(newPrice);
             }
         };
         rl.question(`Override gas price? [${gasPrice}] `, gasPriceCallback);
