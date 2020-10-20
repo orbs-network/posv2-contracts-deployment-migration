@@ -11,8 +11,7 @@
     "migrate-delegations-local": "cd delegations-migration && npm run migrate-local",
     "migrate-delegations-mainnet": "cd delegations-migration && npm run migrate-mainnet",
     "finalize-deployment": "cd contract-deployment && npm run finalize-deployment",
-    "start-ganache": "ganache-cli -v -m \"$(cat .secret)\" -p 7545 --fork https://mainnet.infura.io/v3/48fb0d9baafd4e28aa34f95d75f6d4ce & echo $! > .ganache_pid",
-    "stop-ganache": "kill $(cat .ganache_pid) ; rm .ganache_pid",
+    "start-ganache": "ganache-cli -v -m \"$(cat .secret)\" -p 7545 --fork https://mainnet.infura.io/v3/48fb0d9baafd4e28aa34f95d75f6d4ce",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -26,6 +25,7 @@
   },
   "homepage": "https://github.com/orbs-network/orbs-migrate-delegations-v2#readme",
   "dependencies": {
+    "@orbs-network/orbs-ethereum-contracts-v2": "0.0.31",
     "ganache-cli": "^6.11.0"
   }
 }

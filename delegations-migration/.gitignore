@@ -1,4 +1,4 @@
 node_modules
 .secret
 .ganache_pid
-migrationSnapshot.json
+_migrationSnapshot.json
