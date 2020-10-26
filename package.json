@@ -25,7 +25,7 @@
   },
   "homepage": "https://github.com/orbs-network/orbs-migrate-delegations-v2#readme",
   "dependencies": {
-    "@orbs-network/orbs-ethereum-contracts-v2": "0.0.31",
+    "@orbs-network/orbs-ethereum-contracts-v2": "0.0.32",
     "ganache-cli": "^6.11.0"
   }
 }
