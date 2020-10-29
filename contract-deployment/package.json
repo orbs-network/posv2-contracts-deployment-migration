@@ -9,7 +9,9 @@
     "refresh-stakes": "export ETHEREUM_MNEMONIC=\"$(cat ../.secret)\" && node --require ts-node/register ./refresh-stakes.ts",
     "test": "echo \"Error: no test specified\" && exit 1",
     "upgrade-elections": "export ETHEREUM_MNEMONIC=\"$(cat ../.secret)\" && node --require ts-node/register ./upgrade-elections.ts",
-    "upgrade-committee": "export ETHEREUM_MNEMONIC=\"$(cat ../.secret)\" && node --require ts-node/register ./upgrade-committee.ts"
+    "upgrade-committee": "export ETHEREUM_MNEMONIC=\"$(cat ../.secret)\" && node --require ts-node/register ./upgrade-committee.ts",
+    "upgrade-rewards": "export ETHEREUM_MNEMONIC=\"$(cat ../.secret)\" && node --require ts-node/register ./upgrade-rewards.ts",
+    "migrate-rewards": "export ETHEREUM_MNEMONIC=\"$(cat ../.secret)\" && node --require ts-node/register ./migrate-reward-balances.ts"
   },
   "author": "",
   "license": "ISC",
