@@ -33,16 +33,6 @@ module.exports = function(web3) {
     const orbsTokenAddress = '0xff56cc6b1e6ded347aa0b7676c85ab0b3d08b0fa';
     const erc20TransferEventAbi = JSON.parse("{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"Transfer\",\"type\":\"event\"}");
 
-    module.exports = async function(callback) {
-        try {
-            await initContractGlobals();
-            await migrate();
-        } catch (e) {
-            console.error(e)
-        }
-        callback();
-    };
-
     const readOnlyContracts = {};
     const writableContracts = {};
     async function initContractGlobals() {
@@ -139,7 +129,7 @@ module.exports = function(web3) {
         const initializationAdmin = await determineInitializationAdmin();
 
         // this may take a few minutes if the user chooses to build a new snapshot
-        const {importDelegations} = await loadMigrationSnapshot(true);
+        const {importDelegations} = await loadMigrationSnapshot();
 
         console.log(`${importDelegations.length} new delegations detected:\n`, JSON.stringify(importDelegations, null, 2));
 
