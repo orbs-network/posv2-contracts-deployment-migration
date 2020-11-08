@@ -16,8 +16,7 @@ module.exports = function(web3) {
 // addresses used internally by dev are not migrated
     const TEAM_WALLET_ADDRESS = "0xC200f98F3C088B868D80d8eb0aeb9D7eE18d604B";
     const VOID_DELEGATION     = "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
-    const DEV_TEST_ADDRESS    = "0x553C3781677a2185d4ea9C8EEFBE971F03ad1417";
-    const stakersBlacklist    = [DEV_TEST_ADDRESS, TEAM_WALLET_ADDRESS];
+    const stakersBlacklist    = [TEAM_WALLET_ADDRESS];
 
 // contracts
     const contractRegistryAddress = JSON.parse(fs.readFileSync("../../deployed-contracts.json")).contractRegistry;
@@ -49,7 +48,7 @@ module.exports = function(web3) {
         writableContracts.delegations = new web3.eth.Contract(delegationsContractAbi, delegationsContractAddress);
     }
 
-    async function migrate() {
+    async function migrate(diffMode) {
         await initPromise;
 
         const initializationAdmin = await determineInitializationAdmin();
@@ -59,7 +58,9 @@ module.exports = function(web3) {
 
         const batched = await splitBatches(importDelegations, initializationAdmin);
 
-        const { totalGas, maxGas } = await estimateImportDelegationsGasUsage(batched, refreshStake, initializationAdmin);
+        const { totalGas, maxGas } = diffMode ?
+            await estimateInitDelegationsGasUsage(importDelegations, refreshStake, initializationAdmin) :
+            await estimateImportDelegationsGasUsage(batched, refreshStake, initializationAdmin);
 
 
         // prompt summary
@@ -102,12 +103,21 @@ module.exports = function(web3) {
             return;
         }
 
-        console.log('about to send importDelegations:\n', JSON.stringify(batched, null, 2));
-
-        for (const b of batched) {
-            txCount++;
-            if (await promptSkipTx(txCount, `Delegations.importDelegations(${JSON.stringify(b.from)}, ${JSON.stringify(b.to)})`)) {
-                promises.push(_sendOneTx(writableContracts.delegations.methods.importDelegations(b.from, b.to), txOpts, txCount));
+        if (!diffMode) {
+            console.log('about to send importDelegations:\n', JSON.stringify(batched, null, 2));
+            for (const b of batched) {
+                txCount++;
+                if (await promptSkipTx(txCount, `Delegations.importDelegations(${JSON.stringify(b.from)}, ${JSON.stringify(b.to)})`)) {
+                    promises.push(_sendOneTx(writableContracts.delegations.methods.importDelegations(b.from, b.to), txOpts, txCount));
+                }
+            }
+        } else {
+            console.log('about to send initDelegations:\n', JSON.stringify(importDelegations, null, 2));
+            for (const d of importDelegations) {
+                txCount++;
+                if (await promptSkipTx(txCount, `Delegations.initDelegation(${JSON.stringify(d.from)}, ${JSON.stringify(d.to)})`)) {
+                    promises.push(_sendOneTx(writableContracts.delegations.methods.initDelegation(d.from, d.to), txOpts, txCount));
+                }
             }
         }
 
@@ -120,71 +130,6 @@ module.exports = function(web3) {
                 promises.push(_sendOneTx(writableContracts.delegations.methods.refreshStake(r.for), txOpts, txCount));
             }
         }
-        await Promise.all(promises);
-    }
-
-    async function migrateDiff() {
-        await initPromise;
-
-        const initializationAdmin = await determineInitializationAdmin();
-
-        // this may take a few minutes if the user chooses to build a new snapshot
-        const {importDelegations} = await loadMigrationSnapshot();
-
-        console.log(`${importDelegations.length} new delegations detected:\n`, JSON.stringify(importDelegations, null, 2));
-
-        if (!(await promptOk('Proceed with migration?'))) {
-            console.log('Aborting..');
-            return;
-        }
-
-        const { totalGas, maxGas } = await estimateInitDelegationsGasUsage(importDelegations, initializationAdmin);
-
-        // prompt summary
-        const gasPriceSuggest = await web3.eth.getGasPrice();
-        const gasPriceSuggestGwei = web3.utils.fromWei(gasPriceSuggest, "gwei");
-        const gasPriceSuggestEth = web3.utils.fromWei(gasPriceSuggest, "ether");
-        const totalPriceEth = gasPriceSuggestEth * totalGas;
-
-        console.log(`total tx count ${importDelegations.length}`);
-        console.log(`Estimated total gas is ${totalGas}, with the max tx consuming ${maxGas}.`);
-        console.log(`Gas price is ${gasPriceSuggestGwei} (gwei), estimated costs are ${totalPriceEth} ETH`);
-
-        const gasPriceGwei = await promptGasPriceGwei(Math.trunc(gasPriceSuggestGwei));
-
-        console.log('\n\n\n');
-        console.log('------------------------------------------------------------------------');
-        console.log('------------------------------------------------------------------------');
-        console.log('------------------------------------------------------------------------');
-        console.log('--------------------                                --------------------');
-        console.log('--------------------      SENDING  TRANSACTIONS     --------------------');
-        console.log('--------------------                                --------------------');
-        console.log('------------------------------------------------------------------------');
-        console.log('------------------------------------------------------------------------');
-        console.log('------------------------------------------------------------------------');
-        console.log('\n\n\n');
-
-        // import delegation transactions
-        let txCount = 0;
-        const promises = [];
-        const txOpts = {
-            gas: 6000000,
-            gasPrice: web3.utils.toWei(web3.utils.toBN(gasPriceGwei), 'gwei'),
-            from: initializationAdmin
-        };
-
-        console.log('sending transactions with options:\n', JSON.stringify(txOpts, null, 2));
-        const ok = await promptOk('Proceed with migration?');
-        if (!ok) {
-            console.log('Aborting..');
-            return;
-        }
-
-        for (const d of importDelegations) {
-            txCount++;
-            promises.push(_sendOneTx(writableContracts.delegations.methods.initDelegation(d.from, d.to), txOpts, txCount));
-        }
-
         await Promise.all(promises);
     }
 
@@ -234,7 +179,7 @@ module.exports = function(web3) {
 
         // refresh stake transactions
         for (const r of refreshStake) {
-            console.log(`Delegations.refreshStake(${r.for}) // (${r.cause})...`);
+            console.log(`Delegations.refreshStake(${r.for}) // (${r.cause || ""})...`);
             const gas = await writableContracts.delegations.methods.refreshStake(r.for).estimateGas({from: initializationAdmin});
             gasEstimates.push({gas, method: "refreshStake"});
         }
@@ -246,7 +191,7 @@ module.exports = function(web3) {
         return { totalGas, maxGas };
     }
 
-    async function estimateInitDelegationsGasUsage(delegations, initializationAdmin) {
+    async function estimateInitDelegationsGasUsage(delegations, refreshStake, initializationAdmin) {
         const gasEstimates = [];
 
         // import delegation transactions
@@ -255,6 +200,15 @@ module.exports = function(web3) {
             const gas = await writableContracts.delegations.methods.initDelegation(d.from, d.to).estimateGas({from: initializationAdmin});
             gasEstimates.push({gas, method: "initDelegation"});
         }
+
+        // refresh stake transactions
+        for (const r of refreshStake) {
+            console.log(`Delegations.refreshStake(${r.for}) // (${r.cause})...`);
+            const gas = await writableContracts.delegations.methods.refreshStake(r.for).estimateGas({from: initializationAdmin});
+            gasEstimates.push({gas, method: "refreshStake"});
+        }
+
+        console.log(JSON.stringify(gasEstimates, null, 2));
 
         // summary
         const maxGas = gasEstimates.reduce((max, ge) => Math.max(max, ge.gas), 0);
@@ -281,6 +235,24 @@ module.exports = function(web3) {
             convertedDelegations.push(isGuardian ? {from: d.from, to: d.from} : d);
         }
         return convertedDelegations;
+    }
+
+    async function determineRefreshStake(delegations) {
+        const tos = _.uniq(delegations.map(d => d.to));
+        const refreshStakes = [];
+        for (const to of tos) {
+            let balanceInStaking = await callWithRetry(readOnlyContracts.staking.methods.getStakeBalanceOf(to));
+            let balanceInDelegations = (await callWithRetry(readOnlyContracts.delegations.methods.stakeOwnersData(to))).stake;
+
+            if (balanceInDelegations !== balanceInStaking) {
+                refreshStakes.push({
+                    for: to,
+                    stakedBalance: balanceInStaking,
+                    delegatedStake: balanceInDelegations,
+                });
+            }
+        }
+        return refreshStakes;
     }
 
     async function loadMigrationSnapshot() {
@@ -313,11 +285,14 @@ module.exports = function(web3) {
 
         console.log("loading delegations...");
         for (const chunk of _.chunk(stakers, 10)) {
-            await Promise.all(chunk.map(s => _appendToSnapshot(s, identityMigration, snapshot)))
+            await Promise.all(chunk.map(s => _appendToSnapshot(s, identityMigration, snapshot)));
         }
 
         console.log("converting guardians to self delegation...");
         snapshot.importDelegations = await convertGuardiansToSelfDelegation(snapshot.importDelegations);
+
+        console.log("determining accounts to refresh stake..");
+        snapshot.refreshStake = await determineRefreshStake(snapshot.importDelegations);
 
         console.log("removing up-to-date delegations...");
         snapshot.importDelegations = await removeUpToDateDelegations(snapshot.importDelegations);
@@ -346,16 +321,18 @@ module.exports = function(web3) {
     }
 
     async function _checkV1Delegations(delegator, delegatesMigratedIdentity) {
-        const importDelegations = {};
+        const importDelegations = {
+            from: delegator,
+            to: delegator,
+            cause: "implicit self delegation"
+        };
         const explicitV1Delegation = await _checkV1ExplicitDelegation(delegator);
         if (explicitV1Delegation) {
-            importDelegations.from = delegator;
             importDelegations.to = _translateGuardianIdentity(delegatesMigratedIdentity, explicitV1Delegation);
             importDelegations.cause = "explicitly delegated in v1";
         } else {
             const implicitV1Delegation = await _checkV1ImplicitDelegation(delegator);
             if (implicitV1Delegation) {
-                importDelegations.from = delegator;
                 importDelegations.to = _translateGuardianIdentity(delegatesMigratedIdentity, implicitV1Delegation);
                 importDelegations.cause = "implicitly delegated in v1";
             }
@@ -364,35 +341,8 @@ module.exports = function(web3) {
     }
 
     async function _appendToSnapshot(delegator, delegatesMigratedIdentity, snapshot) {
-
         const v1DelegationsDesc = await _checkV1Delegations(delegator, delegatesMigratedIdentity);
-
-        const v2Delegation = await callWithRetry(readOnlyContracts.delegations.methods.getDelegation(delegator));
-        if (v1DelegationsDesc.to) {
-            snapshot.importDelegations.push(v1DelegationsDesc);
-            _insertAndDeDup(snapshot.refreshStake, 'for', {
-                for: v1DelegationsDesc.to,
-                cause: "found at least one delegator"
-            }, true);
-        } else {
-            // delegator self delegating (or V2 delegations contract is already aware of her delegation).
-            // if someone else delegates to her - she will get a refreshStake entry in the code above.
-            // Otherwise, her stake will not be refreshed by 'v1DelegationsDesc', so:
-            // we're only worried about the case where no one delegates to her, and she is not delegating to others.
-            // therefore, we can ensure her self stake is identical to be her delegated stake.
-            let stakedBalance = await callWithRetry(readOnlyContracts.staking.methods.getStakeBalanceOf(delegator));
-            let delegatedStake = await callWithRetry(readOnlyContracts.delegations.methods.getDelegatedStake(delegator));
-
-            if (delegatedStake !== stakedBalance) {
-                _insertAndDeDup(snapshot.refreshStake, 'for', {
-                    for: delegator,
-                    stakedBalance,
-                    delegatedStake,
-                    cause: "self delegating with potentially no delegations"
-                }, false);
-            }
-        }
-
+        snapshot.importDelegations.push(v1DelegationsDesc);
         console.log('processed', delegator);
     }
 
@@ -491,7 +441,6 @@ module.exports = function(web3) {
 
     return {
         migrate,
-        migrateDiff,
         constructSnapshot
     }
 }

@@ -13,7 +13,7 @@ async function getPastEventsFromMainnet(abi, address, eventName, topics) {
     const sig = `${eventName}(${eventAbi.inputs.map( i => i.type).join(',')})`;
     const topic = web3.utils.keccak256(sig);
     const logs = await web3.eth.getPastLogs({
-        fromBlock: '0x0',
+        fromBlock: 'earliest',
         toBlock: 'latest',
         address,
         topics: [topic].concat(...(topics || []))
