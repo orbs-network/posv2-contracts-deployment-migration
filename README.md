@@ -3,6 +3,11 @@
 A collection of scripts and utilities for deplying and migrating Orbs PoS contracts on Ethereum. 
 
 ## Deploying fresh contracts
+1. Upgrade `@orbs-network/orbs-ethereum-contracts-v2` if neccessary. This npm package contains the actual contracts and ABIs used by this script.
+    ```
+    npm install @orbs-network/orbs-ethereum-contracts-v2
+    ```
+
 1. Set the following env vars:
 
     ```
