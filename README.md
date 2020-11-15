@@ -93,3 +93,17 @@ This script migrates reward balances from old reward contracts to the current on
 - The contract registry holds the addresses of the new reward contracts.
 
 
+# Upgrading a contract
+
+The typical upgrade flow is as follows:
+
+1. Deploy the new contract.
+2. Lock the previous contract using the `Lockable` interface, to avoid state changes in the old contract during migration.
+3. Migrate data from the previous contract by using a priviliges initialization function in the new contract. In case of a large state, split over several transactions.
+4. Set the address of the new contract in the contract registry.
+
+* It is crucial that updating the contract registry is the final step. This is the point in time where the new contract is officialy integrated with the PoS ecosystem.
+* Any events emitted by the new contract prior to setting in the registry should not be assumes to be available to clients. Most clients only start tracking contract events starting from the registry update block number.
+
+
+2. Perform any neccessary state migration from the p
