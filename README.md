@@ -1,4 +1,4 @@
-# Orbs PoS Contract Migration
+# Orbs PoS V2 Contract deployment and migration
 
 A collection of scripts and utilities for deplying and migrating Orbs PoS contracts on Ethereum. 
 
