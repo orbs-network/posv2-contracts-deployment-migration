@@ -2,7 +2,7 @@
 
 A collection of scripts and utilities for deplying and migrating Orbs PoS contracts on Ethereum. 
 
-# Global configuration
+## Global configuration
 
 1. run `npm install`
 
@@ -72,7 +72,7 @@ A collection of scripts and utilities for deplying and migrating Orbs PoS contra
 
 Some Orbs PoS v2 contracts are equipped with data migration mechanisms that allows a priviliged user (typically the initialization admin) to initialze the contract with existing state (such as a list of registered guardians, delegations, and so on). This repo contains helper scripts that perform such migrations. See also - contract upgrade flow (todo link).
 
-# Migrate registered guardians script
+## Migrate registered guardians script
 
 This script initializes the guardian regsitry contract with a list of guardians using the `migrateGuardians()` function. It reads registraion events from the previous contract to form a list of guardians to migrate.
 
@@ -81,7 +81,7 @@ This script initializes the guardian regsitry contract with a list of guardians 
 2. Run the migration script:
     `cd contract-deployment && npm run migrate-guardians`
     
-# Migrate reward balances script
+## Migrate reward balances script
 
 1. Edit `contract-deployment/migrate-reward-balances.ts`. Modify `CONTRACT_REGISTRY_ADDR`, `OLD_STAKING_REWARDS_ADDR`, `OLD_FEES_AND_BOOTSTRAP_REWARDS_ADDR`, `OLD_STAKING_REWARDS_ABI`, `OLD_FEES_AND_BOOTSTRAP_REWARDS_ABI` to conatins the corresponding contract addresses and ABIs. The ABIs of the current contracts are assume to match the ones in the `@orbs-network/orbs-ethereum-contracts-v2` package.
 
