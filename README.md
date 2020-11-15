@@ -25,16 +25,17 @@ A collection of scripts and utilities for deplying and migrating Orbs PoS contra
     - To test using `ganache-cli` simply set `ETHEREUM_URL` with your local `ganache` endpoint. 
     - To test with `ganache-core` (an in-process ganache instance), run with `export GANACHE_CORE=true`. 
     - To test with a mainnet-fork `ganache-core`, run with `export GANACHE_CORE=true` and `export ETHEREUM_FORK_URL=<Ethereum endpoint URL>`.
-    
+  
+4. In the repo root, create a file called `.secret` that conatins the Ethereum mnemonic you intend to use to send transactions. All contract managers are initialy set to (and assumed to be) the first mnemonic account (with the exception of `RegistryAdmin`, which is set in the configuration).
+ 
+
 
 ## Deploying fresh contracts
     
 1. `cd contract-deployment`
 
-1. Update `contract-deployment/config.ts` according to the desired contract configuration. See TODO for full list of configuration options.
+2. Update `contract-deployment/config.ts` according to the desired contract configuration. See TODO for full list of configuration options.
 
-2. In the repo root, create a file called `.secret` that conatins the Ethereum mnemonic you intend to use to deployment. All contract managers are initialy set to the first mnemonic account (with the exception of `RegistryAdmin`, which is set in the configuration).
- 
 3. Run the contract deployment script:
 
     `npm run deploy-contracts`
@@ -92,18 +93,24 @@ This script migrates reward balances from old reward contracts to the current on
 - The previous and new contracts share the same contract registry.
 - The contract registry holds the addresses of the new reward contracts.
 
-
 # Upgrading a contract
 
+This repo contains several script for upgrading specific contracts.
 The typical upgrade flow is as follows:
 
 1. Deploy the new contract.
 2. Lock the previous contract using the `Lockable` interface, to avoid state changes in the old contract during migration.
-3. Migrate data from the previous contract by using a priviliges initialization function in the new contract. In case of a large state, split over several transactions.
+3. Perform any neccessary state migration from the previous contract (e.g. by using priviliges initialization function in the new contract). In case of a large state, split over several transactions.
 4. Set the address of the new contract in the contract registry.
 
 * It is crucial that updating the contract registry is the final step. This is the point in time where the new contract is officialy integrated with the PoS ecosystem.
 * Any events emitted by the new contract prior to setting in the registry should not be assumes to be available to clients. Most clients only start tracking contract events starting from the registry update block number.
 
+## Committee contract upgrade script
 
-2. Perform any neccessary state migration from the p
+(a) Locks all contracts, (b) deployes a new committee contract, (c) migrates the committee from the old to the new, (d) sets the new one in the registry and (e) unlocks all contracts.
+
+1. Edit `contract-deployment/upgrade-committee.ts`. Modify `CONTRACT_REGISTRY_ADDR` to contain the address of the contract registry.
+
+2. Run the upgrade script:
+    `cd contract-deployment && npm run upgrade-committee`
