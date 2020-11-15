@@ -114,3 +114,29 @@ The typical upgrade flow is as follows:
 
 2. Run the upgrade script:
     `cd contract-deployment && npm run upgrade-committee`
+    
+Similarly to the main contract deployment script, the contract configration is taken from `contract-deployment/config.ts`.
+
+## Elections contract upgrade script
+
+(a) Locks all contracts, (b) deployes a new elections contract, (c) sets the new one in the registry and (d) unlocks all contracts.
+
+1. Edit `contract-deployment/upgrade-elections.ts`. Modify `CONTRACT_REGISTRY_ADDR` to contain the address of the contract registry.
+
+2. Run the upgrade script:
+    `cd contract-deployment && npm run upgrade-elections`
+    
+Similarly to the main contract deployment script, the contract configration is taken from `contract-deployment/config.ts`.
+
+* Note - no state migration is performed (vote-out and vote-unready state is reset). 
+
+## GuardiansRegistration contract upgrade script
+
+(b) deployes a new elections contract, (c) migrates registered guardians from the previous contract (c) sets the new contract in the regsitry.
+
+1. Edit `contract-deployment/upgrade-guardian-registration.ts`. Modify `CONTRACT_REGISTRY_ADDR` and `PREVIOUS_GUARDIAN_REGISTRATION_CONTRACT_ADDR` to contain the corresponding addresses.
+
+2. Run the upgrade script:
+    `cd contract-deployment && npm run upgrade-guardians-registration`
+    
+Similarly to the main contract deployment script, the contract configration is taken from `contract-deployment/config.ts`.
