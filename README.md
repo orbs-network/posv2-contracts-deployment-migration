@@ -18,7 +18,7 @@ A collection of scripts and utilities for deplying and migrating Orbs PoS contra
     export GAS_PRICE=<Gas price in WEI for contract call transactions>
     
     # optional
-    export GAS_LIMIT=<Gas limit for all transactions (defaults to 7000000)>
+    export GAS_LIMIT=<Single transaction gas limit (defaults to 7000000)>
     export WEB3_DRIVER_VERBOSE=true # for more visibility on progress 
     ```
     
