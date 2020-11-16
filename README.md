@@ -214,7 +214,6 @@ Migrates reward balances from old reward contracts to the currently deployed one
 
 Running instructions:
 1. Edit `contract-deployment/migrate-reward-balances.ts`. Modify `CONTRACT_REGISTRY_ADDR`, `OLD_STAKING_REWARDS_ADDR`, `OLD_FEES_AND_BOOTSTRAP_REWARDS_ADDR`, `OLD_STAKING_REWARDS_ABI`, `OLD_FEES_AND_BOOTSTRAP_REWARDS_ABI` to contain the contract registry address and ABIs of the currently deployed stakingRewrads and feesAndBootstrapRewards contracts.
-2. Run the upgrade script:
-    `cd contract-deployment && npm run upgrade-rewards`
+2. Run the migration script:
+    `cd contract-deployment && npm run migrate-reward-balances`
     
-Similarly to the main contract deployment script, the contract configration is taken from `contract-deployment/config.ts`.
