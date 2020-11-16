@@ -75,7 +75,7 @@ Some Orbs PoS v2 contracts are equipped with data migration mechanisms that allo
 
 ## Migrate registered guardians script
 
-This script initializes the guardian regsitry contract with a list of guardians using the `migrateGuardians()` function. It reads registraion events from the previous contract to form a list of guardians to migrate.
+This script initializes the guardian regsitry contract with a list of guardians using the `migrateGuardians()` function. It form the list of guardians to migrate by reads registraion past registration events from the previous contract .
 
 1. Edit `contract-deployment/migrate-guardians.ts`. Modify `PREVIOUS_GUARDIAN_REGISTRATION_CONTRACT_ADDR` and `NEW_GUARDIAN_REGISTRATION_CONTRACT_ADDR` to contain the corresponding contract addresses.
 
@@ -104,14 +104,19 @@ The typical upgrade flow is as follows:
 4. Set the address of the new contract in the contract registry.
 
 * It is crucial that updating the contract registry is the final step. This is the point in time where the new contract is officialy integrated with the PoS ecosystem.
-* Any events emitted by the new contract prior to setting in the registry should not be assumes to be available to clients. Most clients only start tracking contract events starting from the registry update block number.
+* Any events emitted by the new contract prior to setting in the registry should <b>not</b> be assumed to be available to clients. Most clients only start tracking contract events starting from the registry update block number.
 
 ## Committee contract upgrade script
 
-(a) Locks all contracts, (b) deployes a new committee contract, (c) migrates the committee from the old to the new, (d) sets the new one in the registry and (e) unlocks all contracts.
+Executes the committee contract upgrade flow:
+1. Locks all contracts
+2. Deployes a new committee contract
+3. Migrates the committee from the old contract to the new, using the `importMembers()` function.
+4. Sets the new contract in the registry.
+5. Unlocks all contracts.
 
+Running instructions:
 1. Edit `contract-deployment/upgrade-committee.ts`. Modify `CONTRACT_REGISTRY_ADDR` to contain the address of the contract registry.
-
 2. Run the upgrade script:
     `cd contract-deployment && npm run upgrade-committee`
     
@@ -119,10 +124,14 @@ Similarly to the main contract deployment script, the contract configration is t
 
 ## Elections contract upgrade script
 
-(a) Locks all contracts, (b) deployes a new elections contract, (c) sets the new one in the registry and (d) unlocks all contracts.
+Executes the elections contract upgrade flow (no state migration):
+1. Locks all contracts.
+2. Deployes a new elections contract.
+3. Sets the elections contract in the registry.
+4. Unlocks all contracts.
 
+Running instructions:
 1. Edit `contract-deployment/upgrade-elections.ts`. Modify `CONTRACT_REGISTRY_ADDR` to contain the address of the contract registry.
-
 2. Run the upgrade script:
     `cd contract-deployment && npm run upgrade-elections`
     
@@ -132,11 +141,55 @@ Similarly to the main contract deployment script, the contract configration is t
 
 ## GuardiansRegistration contract upgrade script
 
-(b) deployes a new elections contract, (c) migrates registered guardians from the previous contract (c) sets the new contract in the regsitry.
+Executes the guardians-registration contract upgrade flow (no state migration):
+1. Deployes a new guardians-registration contract.
+2. Migrates registered guardians from the previous contract using the `migrateGuardians()` function.
+3. sets the new contract in the regsitry.
 
+Running instructions:
 1. Edit `contract-deployment/upgrade-guardian-registration.ts`. Modify `CONTRACT_REGISTRY_ADDR` and `PREVIOUS_GUARDIAN_REGISTRATION_CONTRACT_ADDR` to contain the corresponding addresses.
-
 2. Run the upgrade script:
     `cd contract-deployment && npm run upgrade-guardians-registration`
     
 Similarly to the main contract deployment script, the contract configration is taken from `contract-deployment/config.ts`.
+
+## GuardiansRegistration contract upgrade script
+
+Executes the guardians-registration contract upgrade flow (no state migration):
+1. Deployes a new guardians-registration contract.
+2. Migrates registered guardians from the previous contract using the `migrateGuardians()` function.
+3. sets the new contract in the regsitry.
+
+Running instructions:
+1. Edit `contract-deployment/upgrade-guardian-registration.ts`. Modify `CONTRACT_REGISTRY_ADDR` and `PREVIOUS_GUARDIAN_REGISTRATION_CONTRACT_ADDR` to contain the corresponding addresses.
+2. Run the upgrade script:
+    `cd contract-deployment && npm run upgrade-guardians-registration`
+    
+Similarly to the main contract deployment script, the contract configration is taken from `contract-deployment/config.ts`.
+
+## FeesWallet contract upgrade script
+
+Executes the upgrade flow for both fee wallet contracts (general fees and certified fees):
+1. Deployes two instances of the FeeWallet contract - general and certified.
+2. Locks the previous fee wallets.
+3. Migrates a given list of fee buckets (hardcoded in the script) from the old contracts to the new ones by calling the `migrateBucket()` function on the old contracts. 
+    The function transfers the amount using the new contracts `acceptBucketMigration()` function.
+3. sets the new contracts in the regsitry.
+
+Running instructions:
+1. Edit `contract-deployment/upgrade-guardian-registration.ts`. Modify `CONTRACT_REGISTRY_ADDR` and `BUCKETS_TO_MIGRATE` to contain the contract registry address and list of buckets to migrate respectivly. Each bucket is identifeid by the timestamp of the first second in the month it represents. 
+2. Run the upgrade script:
+    `cd contract-deployment && npm run upgrade-guardians-registration`
+    
+Similarly to the main contract deployment script, the contract configration is taken from `contract-deployment/config.ts`.
+
+## Reward contracts upgrade script
+
+Executes the upgrade flow for both reward contracts (StakingRewards and FeesAndBootstrapRewards):
+1. Deactivate reward distribution on both contracts using `deactivateRewardDistribution()`.
+    This ensures that no new rewrads are distributed, and that the contracts have withdrawn the neccessary amount of funds for the previously assigned rewards. This means that the old contracts are no longer dependent on the protocol wallets, and we can safely switch their clients to the new contracts.
+2. Deployes the new contracts.
+3. Activates reward distribution on the new contracts using `activateRewardDistribution(startTime=lastAssignmentTime)`. `lastAssignmentTime` is obtained from the old contracts.
+4. Updates the client of the stakingRewardsWallet to the new stakingRewards contract. The client is the address that is allowed to withdraw funds from the wallet.
+5. Updates the client of the bootstrapRewardsWallet to the new feesAndBootstrapRewards contract.
+4. Sets the new contracts in the registry.
