@@ -192,4 +192,29 @@ Executes the upgrade flow for both reward contracts (StakingRewards and FeesAndB
 3. Activates reward distribution on the new contracts using `activateRewardDistribution(startTime=lastAssignmentTime)`. `lastAssignmentTime` is obtained from the old contracts.
 4. Updates the client of the stakingRewardsWallet to the new stakingRewards contract. The client is the address that is allowed to withdraw funds from the wallet.
 5. Updates the client of the bootstrapRewardsWallet to the new feesAndBootstrapRewards contract.
-4. Sets the new contracts in the registry.
+6. Sets the new contracts in the registry.
+
+<b>Note - migrating existing reward balances between the old and new contracts is done in a separate step after this upgrade flow - see TODO</b>
+
+Running instructions:
+1. Edit `contract-deployment/upgrade-guardian-registration.ts`. Modify `CONTRACT_REGISTRY_ADDR` and `OLD_STAKING_REWARDS_ABI`, `OLD_FEES_AND_BOOTSTRAP_REWARDS_ABI` to contain the contract registry address and ABIs of the currently deployed stakingRewrads and feesAndBootstrapRewards contracts.
+2. Run the upgrade script:
+    `cd contract-deployment && npm run upgrade-rewards`
+    
+Similarly to the main contract deployment script, the contract configration is taken from `contract-deployment/config.ts`.
+
+## Migrating reward balances
+
+Migrates reward balances from old reward contracts to the currently deployed ones:
+1. Builds a list of all addresses with existing balances by checking the balance of any past guardians and delegators.
+2. For each delegator and guardian, migrates the staking rewards balance to the new contract by calling `migrateRewardsBalance()` on the old stakingRewards contract.
+3. For each guardian, migrate the fees and bootstrap reward balances to the new contract by calling `migrateRewardsBalance()` on the old feesAndBootstrapRewards contract.
+
+<b>Important - this flow assumes the both the new and old contracts share the same contract registry, and that the new contracts are set in the registry. This allows the migration function to be permissionless, as the contracts migrate the balance to the one currently set in the registry</b> (by calling `acceptRewardsBalanceMigration()` on the new contract).
+
+Running instructions:
+1. Edit `contract-deployment/migrate-reward-balances.ts`. Modify `CONTRACT_REGISTRY_ADDR`, `OLD_STAKING_REWARDS_ADDR`, `OLD_FEES_AND_BOOTSTRAP_REWARDS_ADDR`, `OLD_STAKING_REWARDS_ABI`, `OLD_FEES_AND_BOOTSTRAP_REWARDS_ABI` to contain the contract registry address and ABIs of the currently deployed stakingRewrads and feesAndBootstrapRewards contracts.
+2. Run the upgrade script:
+    `cd contract-deployment && npm run upgrade-rewards`
+    
+Similarly to the main contract deployment script, the contract configration is taken from `contract-deployment/config.ts`.
