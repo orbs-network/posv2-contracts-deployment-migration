@@ -4,6 +4,8 @@ A collection of scripts and utilities for deplying and migrating Orbs PoS contra
 
 ## Global configuration
 
+<b> IMPORTANT - These settings DO NOT apply to the v1 delegation migration script, which uses it's own configuration mechanism </b>
+
 1. run `npm install`
 
 2. Upgrade `@orbs-network/orbs-ethereum-contracts-v2` if neccessary. This npm package contains the actual contracts and ABIs used by this script.
@@ -27,8 +29,6 @@ A collection of scripts and utilities for deplying and migrating Orbs PoS contra
     - To test with a mainnet-fork `ganache-core`, run with `export GANACHE_CORE=true` and `export ETHEREUM_FORK_URL=<Ethereum endpoint URL>`.
   
 4. In the repo root, create a file called `.secret` that conatins the Ethereum mnemonic you intend to use to send transactions. All contract managers are initialy set to (and assumed to be) the first mnemonic account (with the exception of `RegistryAdmin`, which is set in the configuration).
- 
-
 
 ## Deploying fresh contracts
     
@@ -67,44 +67,21 @@ A collection of scripts and utilities for deplying and migrating Orbs PoS contra
 
 7. Connect the staking contract to the staking contract handler (see TODO).
    Note - in the time frame between delegation migration there may have been staking notifications that the new contract have missed. Seee Migrating stake info on how to close these gaps. TODO link
-   
-   
-## State migration
-
-Some Orbs PoS v2 contracts are equipped with data migration mechanisms that allows a priviliged user (typically the initialization admin) to initialze the contract with existing state (such as a list of registered guardians, delegations, and so on). This repo contains helper scripts that perform such migrations. See also - contract upgrade flow (todo link).
-
-## Migrate registered guardians script
-
-This script initializes the guardian regsitry contract with a list of guardians using the `migrateGuardians()` function. It form the list of guardians to migrate by reads registraion past registration events from the previous contract .
-
-1. Edit `contract-deployment/migrate-guardians.ts`. Modify `PREVIOUS_GUARDIAN_REGISTRATION_CONTRACT_ADDR` and `NEW_GUARDIAN_REGISTRATION_CONTRACT_ADDR` to contain the corresponding contract addresses.
-
-2. Run the migration script:
-    `cd contract-deployment && npm run migrate-guardians`
-    
-## Migrate reward balances script
-
-1. Edit `contract-deployment/migrate-reward-balances.ts`. Modify `CONTRACT_REGISTRY_ADDR`, `OLD_STAKING_REWARDS_ADDR`, `OLD_FEES_AND_BOOTSTRAP_REWARDS_ADDR`, `OLD_STAKING_REWARDS_ABI`, `OLD_FEES_AND_BOOTSTRAP_REWARDS_ABI` to conatins the corresponding contract addresses and ABIs. The ABIs of the current contracts are assume to match the ones in the `@orbs-network/orbs-ethereum-contracts-v2` package.
-
-2. Run the migration script:
-    `cd contract-deployment && npm run migrate-reward-balances`
-   
-This script migrates reward balances from old reward contracts to the current ones, as part of the reward contracts upgrade flow (todo link). It first compiles a list of addresses with a positive reward balance (delegates and guardians), and then performs the migration. The script assumes that:
-- The previous and new contracts share the same contract registry.
-- The contract registry holds the addresses of the new reward contracts.
-
+      
 # Upgrading a contract
 
-This repo contains several script for upgrading specific contracts.
+This repo contains several script for upgrading specific contracts. Some Orbs PoS v2 contracts are equipped with data migration mechanisms that allows a priviliged user (typically the initialization admin) to initialze the contract with existing state (such as a list of registered guardians, delegations, and so on). This repo contains helper scripts that perform such migrations.
+
 The typical upgrade flow is as follows:
 
 1. Deploy the new contract.
 2. Lock the previous contract using the `Lockable` interface, to avoid state changes in the old contract during migration.
-3. Perform any neccessary state migration from the previous contract (e.g. by using priviliges initialization function in the new contract). In case of a large state, split over several transactions.
+3. Perform any neccessary state migration from the previous contract (e.g. by using priviliges initialization function in the old and/or new contracts). In case of a large state, split over several transactions.
 4. Set the address of the new contract in the contract registry.
 
 * It is crucial that updating the contract registry is the final step. This is the point in time where the new contract is officialy integrated with the PoS ecosystem.
 * Any events emitted by the new contract prior to setting in the registry should <b>not</b> be assumed to be available to clients. Most clients only start tracking contract events starting from the registry update block number.
+* <b>Important</b> Many of these script interact with both and older and newer versions of the same contract. However, in many cases, the scripts assume the same ABI for both. Beware of breaking changes, and if neccessary modify the script to use and old ABI version when interacting with an older version. 
 
 ## Committee contract upgrade script
 
@@ -217,3 +194,45 @@ Running instructions:
 2. Run the migration script:
     `cd contract-deployment && npm run migrate-reward-balances`
     
+## Migrating delegations from Orbs PoS V1 delegations contract
+
+<b>IMPORTANT - the global configuration (the environment variables defined at the top of this readme) do no apply to the delegation migration scripts</b>
+
+The `delegations-migration` folder contains a collection of scripts and logic for migrating delegations from Orbs PoS v1. 
+The v2 delegations contract has two init functions used for delegation import: `initDelegation()` and `importDelegations()`. Both can only be called during initialization, by the initializationAdmin.
+* `initDelegation(from, to)` is used to import an existing delegation. It can be used at any time during initialization, and on any address, even if the address already has an existing delegation. It performs a full delegation flow (notifying the rewards and election contracts on the changes), which makes it a relativly expensive operation).
+* `importDelegations(from[], to[])` is used to initialize a batch of delegations. It can only be used for delegators without an existing delegation, and it assumes it is not a new delegation so it does not notify other contracts. It can only be used before reward distribution is activated, to avoid discrepencies in reward distribution over the time period before the import took place.
+
+Typically, `importDelegations()` should be used for the initial import, and `initDelegation()` should be used to update delegations that changed since the first import.
+
+The script also takes care of finding discrepencies between a stakers amount as seen by the delegations contract and the staking contract. It compares the amounts for each staker, fixes each discrepency by using the delegations contract `refreshStake()` function. `refreshStake()` reads the current balance from the staking contract and updates.
+
+Regardless of the flow selected (initDelegaiton/ importDelegations), the script start by listing all stake holders an v1 delegations to construct a list of delegations to import and addresses which need `refreshStake()`. It then filters out delegations that are already present in the v2 delegations contract. It also takes care of guardian address conversion (see TODO). Additionaly it cancels any v1 delegation done by a guardian, to make sure guardians are self delegated.
+The final lists of delegations are stored in `delegations-migration/migrationSnapshot.json` and can be used later in a second invocation of the script if needed (instead of rebuilding the list).
+
+Running instructions:
+1. Make sure the root of the repo contains a file named `deployed-contracts.json` with the following:
+```
+{
+  "contractRegistry": <The address of the contract registry>
+}
+```
+This is the file generated by the contract deployment script, and it may contain addresses for other contracts as well. This script only needs the contract registry address.
+
+2. Make sure the `.secret` file is set with the correct mnemonic, which includes the account of the initialization admin.
+
+### Running with `ganache-cli`
+3. Start a local ganache instance:
+```npm run start-ganache```
+
+4. Run the migration script (one of the following):
+```npm run migrate-delegations-local # Migration using importDelegation()```
+```npm run migrate-delegations-diff-local # Migration using initDelegation(), to update with diff since last import```
+
+### Running on mainnet
+Run one of:
+```npm run migrate-delegations-mainnet # Migration using importDelegation()```
+```npm run migrate-delegations-diff-mainnet # Migration using initDelegation(), to update with diff since last import```
+
+
+
