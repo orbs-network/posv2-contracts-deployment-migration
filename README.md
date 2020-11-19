@@ -69,7 +69,7 @@ The contracts' ABIs and source code are taken from the [@orbs-network/orbs-ether
     This will call `initializationComplete()` on all managed contracts.
 
 7. Connect the staking contract to the staking contract handler (see setStakeChangeNotifier in the [StakingContract](https://github.com/orbs-network/orbs-staking-contract/blob/master/contracts/StakingContract.sol)).
-   Note - in the time frame between delegation migration there may have been staking notifications that the new contract have missed. Seee "Fixing discrepenceis between the StakingContract and DelegationsContract" on how to close these gaps.
+   Note - in the time frame between delegation migration there may have been staking notifications that the new contract have missed. See [Fixing discrepenceis between the StakingContract and DelegationsContract](#fixing-discrepenceis-between-the-stakingcontract-and-delegationscontract) on how to close these gaps.
       
 # Upgrading contracts
 
@@ -78,7 +78,7 @@ This repo contains several script for upgrading specific contracts. Some Orbs Po
 The typical upgrade flow is as follows:
 
 1. Deploy the new contract.
-2. Verify the contract in Etherscan. This ensures everyone has access to the contract ABI and source code. That includes clients that may depend on it.
+2. Verify the contract in Etherscan. This ensures everyone has access to the contract ABI and source code (some clients may depend on it).
 3. Update `@orbs-network/orbs-ethereum-contracts-v2`'s `getAbiByContractAddress()` function so that it would return the contract ABI when given the contract address (see the following Pitfalls section).
 4. Lock the previous contract using the `Lockable` interface, to avoid state changes in the old contract during migration.
 5. Perform any neccessary state migration from the previous contract (e.g. by using priviliges initialization function in the old and/or new contracts). In case of a large state, split over several transactions.
