@@ -68,7 +68,7 @@ See [here](https://github.com/orbs-network/posv2-contracts-deployment-migration/
     This will call `initializationComplete()` on all managed contracts.
 
 7. Connect the staking contract to the staking contract handler (see setStakeChangeNotifier in the [StakingContract](https://github.com/orbs-network/orbs-staking-contract/blob/master/contracts/StakingContract.sol)).
-   Note - in the time frame between delegation migration there may have been staking notifications that the new contract have missed. Seee Migrating stake info on how to close these gaps. TODO link
+   Note - in the time frame between delegation migration there may have been staking notifications that the new contract have missed. Seee "Fixing discrepenceis between the StakingContract and DelegationsContract" on how to close these gaps.
       
 # Upgrading a contract
 
@@ -178,7 +178,7 @@ Executes the upgrade flow for both reward contracts (StakingRewards and FeesAndB
 5. Updates the client of the bootstrapRewardsWallet to the new feesAndBootstrapRewards contract.
 6. Sets the new contracts in the registry.
 
-**Note - migrating existing reward balances between the old and new contracts is done in a separate step after this upgrade flow - see TODO**
+**Note - migrating existing reward balances between the old and new contracts is done in a separate step after this upgrade flow** - see "Migrate rewrad balances".
 
 Running instructions:
 1. Edit `contract-deployment/upgrade-guardian-registration.ts`. Modify `CONTRACT_REGISTRY_ADDR` and `OLD_STAKING_REWARDS_ABI`, `OLD_FEES_AND_BOOTSTRAP_REWARDS_ABI` to contain the contract registry address and ABIs of the currently deployed stakingRewrads and feesAndBootstrapRewards contracts.
@@ -212,7 +212,7 @@ The v2 delegations contract has two init functions used for delegation import: `
 
 Typically, `importDelegations()` should be used for the initial import, and `initDelegation()` should be used to update delegations that changed since the first import.
 
-Regardless of the flow selected (initDelegaiton/ importDelegations), the script start by listing all stake holders an v1 delegations to construct a list of delegations to import and addresses which need `refreshStake()`. It then filters out delegations that are already present in the v2 delegations contract. It also takes care of guardian address conversion (see TODO). Additionaly it cancels any v1 delegation done by a guardian, to make sure guardians are self delegated.
+Regardless of the flow selected (initDelegaiton/ importDelegations), the script start by listing all stake holders an v1 delegations to construct a list of delegations to import and addresses which need `refreshStake()`. It then filters out delegations that are already present in the v2 delegations contract. It also takes care of guardian address conversion as defined by [this contract](https://etherscan.io/address/0xd2abc20b2a7bfdf4c7e126a669d2c43293845c7d). Additionaly it cancels any v1 delegation done by a guardian, to make sure guardians are self delegated.
 The final lists of delegations are stored in `delegations-migration/migrationSnapshot.json` and can be used later in a second invocation of the script if needed (instead of rebuilding the list).
 
 Running instructions:
