@@ -297,3 +297,13 @@ Careful - this flow is not yet supported by the PoS clients used by Orbs Guardia
 ## DelegationsContract upgrade flow
 
 This is similar to the flow described in [Migrating delegations from Orbs PoS V1 delegations contract](https://github.com/orbs-network/posv2-contracts-deployment-migration/blob/master/README.md#migrating-delegations-from-orbs-pos-v1-delegations-contract). The only differnece is that the list of existing delegations should be taken from the current delegations contract. 
+
+1. Deploy the new delegations contract.
+
+2. Lock current delegations contract.
+
+3. Construct a list of all current delegations (e.g. by tracking the `Delegated` event).
+
+4. Initialize the delegations in the new contract using the contract's `importDelegations()`.
+
+5. Set the new delegations contract in the registry.
