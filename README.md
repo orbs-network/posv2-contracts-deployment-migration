@@ -71,7 +71,7 @@ The contracts' ABIs and source code are taken from the [@orbs-network/orbs-ether
 7. Connect the staking contract to the staking contract handler (see setStakeChangeNotifier in the [StakingContract](https://github.com/orbs-network/orbs-staking-contract/blob/master/contracts/StakingContract.sol)).
    Note - in the time frame between delegation migration there may have been staking notifications that the new contract have missed. Seee "Fixing discrepenceis between the StakingContract and DelegationsContract" on how to close these gaps.
       
-# Upgrading a contract
+# Upgrading contracts
 
 This repo contains several script for upgrading specific contracts. Some Orbs PoS v2 contracts are equipped with data migration mechanisms that allows a priviliged user (typically the initialization admin) to initialze the contract with existing state (such as a list of registered guardians, delegations, and so on). This repo contains helper scripts that perform such migrations.
 
