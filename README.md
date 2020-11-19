@@ -2,6 +2,8 @@
 
 A collection of scripts and utilities for deplying and migrating Orbs PoS contracts on Ethereum. 
 
+See [here](https://github.com/orbs-network/posv2-contracts-deployment-migration/blob/master/DEPLOYED_CONTRACTS.md) for the full list of deployed contracts.
+
 ## Global configuration
 
 1. run `npm install`
@@ -80,6 +82,7 @@ The typical upgrade flow is as follows:
 4. Lock the previous contract using the `Lockable` interface, to avoid state changes in the old contract during migration.
 5. Perform any neccessary state migration from the previous contract (e.g. by using priviliges initialization function in the old and/or new contracts). In case of a large state, split over several transactions.
 6. Set the address of the new contract in the contract registry.
+7. Update the [list of deployed contracts](https://github.com/orbs-network/posv2-contracts-deployment-migration/blob/master/DEPLOYED_CONTRACTS.md).
 
 ### Pitfalls
 * It is crucial that updating the contract registry is the final step. This is the point in time where the new contract is officialy integrated with the PoS ecosystem. The state of the new and old contracts should be equivalent at the time of the registry update.
