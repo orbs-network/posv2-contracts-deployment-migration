@@ -26,7 +26,7 @@ A collection of scripts and utilities for deplying and migrating Orbs PoS contra
     - To test with `ganache-core` (an in-process ganache instance), run with `export GANACHE_CORE=true`. 
     - To test with a mainnet-fork `ganache-core`, run with `export GANACHE_CORE=true` and `export ETHEREUM_FORK_URL=<Ethereum endpoint URL>`.
     
-    <b> IMPORTANT - These settings DO NOT apply to the v1 delegation migration script</b>
+    ** IMPORTANT - These settings DO NOT apply to the v1 delegation migration script**
   
 4. In the repo root, create a file called `.secret` that conatins the Ethereum mnemonic you intend to use to send transactions. All contract managers are initialy set to (and assumed to be) the first mnemonic account (with the exception of `RegistryAdmin`, which is set in the configuration).
 
@@ -34,7 +34,7 @@ A collection of scripts and utilities for deplying and migrating Orbs PoS contra
     
 1. `cd contract-deployment`
 
-2. Update `contract-deployment/config.ts` according to the desired contract configuration. See TODO for full list of configuration options.
+2. Update `contract-deployment/config.ts` according to the desired contract configuration. See the [default config](https://github.com/orbs-network/posv2-contracts-deployment-migration/blob/master/contract-deployment/config.ts) for full list of configuration options.
 
 3. Run the contract deployment script:
 
@@ -43,12 +43,12 @@ A collection of scripts and utilities for deplying and migrating Orbs PoS contra
     This will deploy all PoS V2 contracts, and generarte a JSON file with addresses for all deployed contracts and managers under the repo root, at `deployed-contracts.json`.
 
 4. At this point, the contracts are fully deployed but still at an inizialization state (`initializationAdmin` has root access, managers are not set, reward distribution is not active, staking contract is disconnected). At this point you take care of:
-    - Topping-up the reward wallets (`stakingRewardsWallet`, `bootstrapRewardsWallet`) according to the configured rates (see TODO for the wallet top-up API).
-    - Setting the `migrationManager` and the `functionalManager` mangaers in the `ContractRegistry` (see TODO).
-    - Perform neccessary data migrations if needed. That may include:
-        - Registered guardians TODO link.
-        - delegations TODO link.
-        - Active committee TODO link. 
+    - Topping-up the reward wallets (`stakingRewardsWallet`, `bootstrapRewardsWallet`) according to the configured rates (see [ProtocolWallet.sol](https://github.com/orbs-network/orbs-ethereum-contracts-v2/blob/master/contracts/spec_interfaces/IProtocolWallet.sol)).
+    - Setting the `migrationManager` and the `functionalManager` mangaers in the `ContractRegistry` (see [IContractRegistry.sol](https://github.com/orbs-network/orbs-ethereum-contracts-v2/blob/master/contracts/spec_interfaces/IContractRegsitry.sol)).
+    - Perform neccessary data migrations if needed (further explained in the rest of this doc). That may include:
+        - Registered guardians
+        - Delegations
+        - Active committee        
         - ..and any other desired initial state.
     Since the contracts are at initialization state, the deployer account is permitted to perform any action on the contracts.
 
@@ -65,7 +65,7 @@ A collection of scripts and utilities for deplying and migrating Orbs PoS contra
     
     This will call `initializationComplete()` on all managed contracts.
 
-7. Connect the staking contract to the staking contract handler (see TODO).
+7. Connect the staking contract to the staking contract handler (see setStakeChangeNotifier in the [StakingContract](https://github.com/orbs-network/orbs-staking-contract/blob/master/contracts/StakingContract.sol)).
    Note - in the time frame between delegation migration there may have been staking notifications that the new contract have missed. Seee Migrating stake info on how to close these gaps. TODO link
       
 # Upgrading a contract
@@ -83,8 +83,8 @@ The typical upgrade flow is as follows:
 
 ### Pitfalls
 * It is crucial that updating the contract registry is the final step. This is the point in time where the new contract is officialy integrated with the PoS ecosystem. The state of the new and old contracts should be equivalent at the time of the registry update.
-* Any events emitted by the new contract prior to setting in the registry should <b>not</b> be assumed to be available to clients. Most clients only start tracking contract events starting from the registry update block number.
-* <b>Events backward compatibility:</b> Many clinets track the PoS history using events. If an event signature changes (e.g. by adding a new field), querying the event using the old signature will no longer work. It is therefore important to ensure that all clients  have the knowlege of which signature to use when querying a contract. Simply put, the clients must use the correct ABI for the queried contract. One way to achieve this is to query etherscan for the ABI of the specific address, assuming the contract is verified. Another option is to use the `getAbiByContractAddress()` function from the contracts package (`@orbs-network/orbs-ethereum-contracts-v2`), <b>assuming it was updated with the address and ABI of the new contract</b>.
+* Any events emitted by the new contract prior to setting in the registry should **not** be assumed to be available to clients. Most clients only start tracking contract events starting from the registry update block number.
+* **Events backward compatibility:** Many clinets track the PoS history using events. If an event signature changes (e.g. by adding a new field), querying the event using the old signature will no longer work. It is therefore important to ensure that all clients  have the knowlege of which signature to use when querying a contract. Simply put, the clients must use the correct ABI for the queried contract. One way to achieve this is to query etherscan for the ABI of the specific address, assuming the contract is verified. Another option is to use the `getAbiByContractAddress()` function from the contracts package (`@orbs-network/orbs-ethereum-contracts-v2`), **assuming it was updated with the address and ABI of the new contract**.
 * Many of these script interact with both and older and newer versions of the same contract. However, in many cases, the scripts assume the same ABI for both. Beware of breaking changes, and if neccessary modify the script to use and old ABI version when interacting with an older version. 
 
 ## Committee contract upgrade script
@@ -175,7 +175,7 @@ Executes the upgrade flow for both reward contracts (StakingRewards and FeesAndB
 5. Updates the client of the bootstrapRewardsWallet to the new feesAndBootstrapRewards contract.
 6. Sets the new contracts in the registry.
 
-<b>Note - migrating existing reward balances between the old and new contracts is done in a separate step after this upgrade flow - see TODO</b>
+**Note - migrating existing reward balances between the old and new contracts is done in a separate step after this upgrade flow - see TODO**
 
 Running instructions:
 1. Edit `contract-deployment/upgrade-guardian-registration.ts`. Modify `CONTRACT_REGISTRY_ADDR` and `OLD_STAKING_REWARDS_ABI`, `OLD_FEES_AND_BOOTSTRAP_REWARDS_ABI` to contain the contract registry address and ABIs of the currently deployed stakingRewrads and feesAndBootstrapRewards contracts.
@@ -191,7 +191,7 @@ Migrates reward balances from old reward contracts to the currently deployed one
 2. For each delegator and guardian, migrates the staking rewards balance to the new contract by calling `migrateRewardsBalance()` on the old stakingRewards contract.
 3. For each guardian, migrate the fees and bootstrap reward balances to the new contract by calling `migrateRewardsBalance()` on the old feesAndBootstrapRewards contract.
 
-<b>Important - this flow assumes the both the new and old contracts share the same contract registry, and that the new contracts are set in the registry. This allows the migration function to be permissionless, as the contracts migrate the balance to the one currently set in the registry</b> (by calling `acceptRewardsBalanceMigration()` on the new contract).
+**Important - this flow assumes the both the new and old contracts share the same contract registry, and that the new contracts are set in the registry. This allows the migration function to be permissionless, as the contracts migrate the balance to the one currently set in the registry** (by calling `acceptRewardsBalanceMigration()` on the new contract).
 
 Running instructions:
 1. Edit `contract-deployment/migrate-reward-balances.ts`. Modify `CONTRACT_REGISTRY_ADDR`, `OLD_STAKING_REWARDS_ADDR`, `OLD_FEES_AND_BOOTSTRAP_REWARDS_ADDR`, `OLD_STAKING_REWARDS_ABI`, `OLD_FEES_AND_BOOTSTRAP_REWARDS_ABI` to contain the contract registry address and ABIs of the currently deployed stakingRewrads and feesAndBootstrapRewards contracts.
@@ -200,7 +200,7 @@ Running instructions:
     
 ## Migrating delegations from Orbs PoS V1 delegations contract
 
-<b>IMPORTANT - the global configuration (the environment variables defined at the top of this readme) do no apply to the delegation migration scripts</b>
+**IMPORTANT - the global configuration (the environment variables defined at the top of this readme) do no apply to the delegation migration scripts**
 
 The `delegations-migration` folder contains a collection of scripts and logic for migrating delegations from Orbs PoS v1. 
 The v2 delegations contract has two init functions used for delegation import: `initDelegation()` and `importDelegations()`. Both can only be called during initialization, by the initializationAdmin.
@@ -208,8 +208,6 @@ The v2 delegations contract has two init functions used for delegation import: `
 * `importDelegations(from[], to[])` is used to initialize a batch of delegations. It can only be used for delegators without an existing delegation, and it assumes it is not a new delegation so it does not notify other contracts. It can only be used before reward distribution is activated, to avoid discrepencies in reward distribution over the time period before the import took place.
 
 Typically, `importDelegations()` should be used for the initial import, and `initDelegation()` should be used to update delegations that changed since the first import.
-
-The script also takes care of finding discrepencies between a stakers amount as seen by the delegations contract and the staking contract. It compares the amounts for each staker, fixes each discrepency by using the delegations contract `refreshStake()` function. `refreshStake()` reads the current balance from the staking contract and updates.
 
 Regardless of the flow selected (initDelegaiton/ importDelegations), the script start by listing all stake holders an v1 delegations to construct a list of delegations to import and addresses which need `refreshStake()`. It then filters out delegations that are already present in the v2 delegations contract. It also takes care of guardian address conversion (see TODO). Additionaly it cancels any v1 delegation done by a guardian, to make sure guardians are self delegated.
 The final lists of delegations are stored in `delegations-migration/migrationSnapshot.json` and can be used later in a second invocation of the script if needed (instead of rebuilding the list).
@@ -237,6 +235,12 @@ This is the file generated by the contract deployment script, and it may contain
 Run one of:
 ```npm run migrate-delegations-mainnet # Migration using importDelegation()```
 ```npm run migrate-delegations-diff-mainnet # Migration using initDelegation(), to update with diff since last import```
+
+## Fixing discrepenceis between the StakingContract and DelegationsContract
+
+The v1 delegation migration script described above also takes care of finding discrepencies between a stakers amount as seen by the delegations contract and the staking contract. It compares the amounts for each staker, fixes each discrepency by using the delegations contract `refreshStake()` function. `refreshStake()` reads the current balance from the staking contract and updates. 
+
+This process is useful regardless of v1 delegations import - it is neccessary whenever StakingContract and DelegationContract are out of sync (for example due to the delegations contract being temporary disconnected from stake change notifications). The script above can be easily altered so that it would only take care of such issues.
 
 # Migrations not covered by scripts in this repo
 
@@ -282,4 +286,6 @@ Careful - this flow is not yet supported by the PoS clients used by Orbs Guardia
 
 3. Move all contracts to the new registry using the previous registry contract's `setNewContractRegistry`. This function can only be called by the registry admin.
 
+## DelegationsContract upgrade flow
 
+This is similar to the flow described in "Migrating delegations from Orbs PoS V1 delegations contract". The only differnece is that the list of existing delegations should be taken from the current delegations contract. 
