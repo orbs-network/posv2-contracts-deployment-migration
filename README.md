@@ -272,7 +272,14 @@ This section describes upgrade and migration flows which are not yet implemneted
 
 4. Set the new contract in the registry.
 
+## ContractRegistry upgrade flow
 
+Careful - this flow is not yet supported by the PoS clients used by Orbs Guardians.
 
+1. Deploy the new registry contract.
+
+2. Set all contracts in the new registry.
+
+3. Move all contracts to the new registry using the previous registry contract's `setNewContractRegistry`. This function can only be called by the registry admin.
 
 
