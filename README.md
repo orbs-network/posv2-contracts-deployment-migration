@@ -3,6 +3,7 @@
 A collection of scripts and utilities for deplying and migrating Orbs PoS contracts on Ethereum. 
 
 See [here](https://github.com/orbs-network/posv2-contracts-deployment-migration/blob/master/DEPLOYED_CONTRACTS.md) for the full list of deployed contracts.
+The contracts' ABIs and source code are taken from the [@orbs-network/orbs-ethereum-contracts-v2](https://github.com/orbs-network/orbs-ethereum-contracts-v2) npm package.
 
 ## Global configuration
 
