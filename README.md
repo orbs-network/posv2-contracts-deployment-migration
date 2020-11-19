@@ -296,4 +296,4 @@ Careful - this flow is not yet supported by the PoS clients used by Orbs Guardia
 
 ## DelegationsContract upgrade flow
 
-This is similar to the flow described in "Migrating delegations from Orbs PoS V1 delegations contract". The only differnece is that the list of existing delegations should be taken from the current delegations contract. 
+This is similar to the flow described in [Migrating delegations from Orbs PoS V1 delegations contract](https://github.com/orbs-network/posv2-contracts-deployment-migration/blob/master/README.md#migrating-delegations-from-orbs-pos-v1-delegations-contract). The only differnece is that the list of existing delegations should be taken from the current delegations contract. 
