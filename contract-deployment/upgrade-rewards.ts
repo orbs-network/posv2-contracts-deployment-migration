@@ -20,7 +20,7 @@ async function upgradeRewards() {
 
     const registryAdmin = accounts[0];
 
-    const contractRegistry: ContractRegistryContract = web3.getExisting('ContractRegistry', CONTRACT_REGISTRY_ADDR);
+    const contractRegistry: ContractRegistryContract = web3.getExisting('ContractRegistry', CONTRACT_REGISTRY_ADDR) as any;
 
     // console.log("Locking contracts..");
     // await contractRegistry.lockContracts();
@@ -32,7 +32,7 @@ async function upgradeRewards() {
 
     const oldFeesAndBootstrapRewradsAddr = await contractRegistry.getContract('feesAndBootstrapRewards');
     console.log(`Previous feesAndBootstrapRewards contract: ${oldFeesAndBootstrapRewradsAddr}`);
-    const oldFeesAndBootstrapRewardsContract = web3.getExisting('FeesAndBootstrapRewards', oldFeesAndBootstrapRewradsAddr, undefined, OLD_FEES_AND_BOOTSTRAP_REWARDS_ABI);
+    const oldFeesAndBootstrapRewardsContract: any = web3.getExisting('FeesAndBootstrapRewards', oldFeesAndBootstrapRewradsAddr, undefined, OLD_FEES_AND_BOOTSTRAP_REWARDS_ABI);
 
     if (readline.question('continue? [yes/no]') != 'yes') {
         throw new Error("aborted by user");
@@ -51,15 +51,15 @@ async function upgradeRewards() {
         config.maxDelegatorsStakingRewardsPercentMille,
         ZERO_ADDR,
         []
-    ]);
+    ]) as any;
 
     console.log('activating staking rewards..');
-    await newStakingRewardsContract.activateRewardDistribution((await oldStakingRewardsContract.stakingRewardsState()).lastAssigned);
+    await newStakingRewardsContract.activateRewardDistribution((await oldStakingRewardsContract.stakingRewardsState()).lastAssigned as any);
 
     const newFeesAndBootstrapRewardsContract: FeesAndBootstrapRewardsContract = await web3.deploy('FeesAndBootstrapRewards', [contractRegistry.address, registryAdmin, config.orbsTokenAddress, config.bootstrapTokenAddress,
         config.generalCommitteeAnnualBootstrap,
         config.certifiedCommitteeAnnualBootstrap,
-    ]);
+    ]) as any;
 
     console.log('activating staking rewards..');
     await newFeesAndBootstrapRewardsContract.activateRewardDistribution((await oldFeesAndBootstrapRewardsContract.feesAndBootstrapState()).lastAssigned);
