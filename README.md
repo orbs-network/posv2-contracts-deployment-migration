@@ -91,6 +91,8 @@ The typical upgrade flow is as follows:
 * **Events backward compatibility:** Many clinets track the PoS history using events. If an event signature changes (e.g. by adding a new field), querying the event using the old signature will no longer work. It is therefore important to ensure that all clients  have the knowlege of which signature to use when querying a contract. Simply put, the clients must use the correct ABI for the queried contract. One way to achieve this is to query etherscan for the ABI of the specific address, assuming the contract is verified. Another option is to use the `getAbiByContractAddress()` function from the contracts package (`@orbs-network/orbs-ethereum-contracts-v2`), **assuming it was updated with the address and ABI of the new contract**.
 * Many of these script interact with both and older and newer versions of the same contract. However, in many cases, the scripts assume the same ABI for both. Beware of breaking changes, and if neccessary modify the script to use and old ABI version when interacting with an older version. 
 
+**Important** - all upgrade script below assume that accounts[0] (the first account derived from the mnemonic) is the migration manager, so it is able to update the contract registry.
+
 ## Committee contract upgrade script
 
 Executes the committee contract upgrade flow:
