@@ -33,7 +33,6 @@ export const config = {
     bootstrapTokenAddress: "0x6b175474e89094c44da98b954eedeac495271d0f",
     stakingContractAddress: "0x01D59Af68E2dcb44e04C50e05F62E7043F2656C3",
 
-    previousContractRegistryAddr: "0x5454223e3078Db87e55a15bE541cc925f3702eB0",
     minimumInitialVcPayment: tokens(21_000).mul(bn(6)), // 6 times the rate
 
     registryAdminAddress: "0xf1fD5233E60E7Ef797025FE9DD066d60d59BcB92",

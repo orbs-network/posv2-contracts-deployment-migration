@@ -10,6 +10,7 @@ import {FeesWalletContract} from "@orbs-network/orbs-ethereum-contracts-v2/typin
 const readline = require("readline-sync");
 
 const CONTRACT_REGISTRY_ADDR = "0x5454223e3078Db87e55a15bE541cc925f3702eB0";
+const BUCKETS_TO_MIGRATE = [1604448000, 1601856000];
 
 async function upgradeFeeWallets() {
     const web3 = new Web3Driver();
@@ -18,7 +19,7 @@ async function upgradeFeeWallets() {
 
     const registryAdmin = accounts[0];
 
-    const contractRegistry: ContractRegistryContract = web3.getExisting('ContractRegistry', CONTRACT_REGISTRY_ADDR);
+    const contractRegistry: ContractRegistryContract = web3.getExisting('ContractRegistry', CONTRACT_REGISTRY_ADDR) as any;
 
     const oldGeneralFeesWalletAddr = await contractRegistry.getContract('generalFeesWallet');
     const oldCertifiedFeesWalletAddr = await contractRegistry.getContract('certifiedFeesWallet');
@@ -29,23 +30,24 @@ async function upgradeFeeWallets() {
         throw new Error("aborted by user");
     }
 
-    const oldGeneralFeesWallet: FeesWalletContract = web3.getExisting('FeesWallet', oldGeneralFeesWalletAddr);
-    const oldCertifiedFeesWallet: FeesWalletContract = web3.getExisting('FeesWallet', oldCertifiedFeesWalletAddr);
+    const oldGeneralFeesWallet: FeesWalletContract = web3.getExisting('FeesWallet', oldGeneralFeesWalletAddr) as any;
+    const oldCertifiedFeesWallet: FeesWalletContract = web3.getExisting('FeesWallet', oldCertifiedFeesWalletAddr) as any;
 
     console.log('locking previous wallets..');
     await oldGeneralFeesWallet.lock();
     await oldCertifiedFeesWallet.lock();
 
     console.log('Deploying new fee wallets..');
-    const newGeneralFeesWallet: FeesWalletContract = await web3.deploy('FeesWallet', [contractRegistry.address, registryAdmin, config.orbsTokenAddress]);
-    const newCertifiedFeesWallet: FeesWalletContract = await web3.deploy('FeesWallet', [contractRegistry.address, registryAdmin, config.orbsTokenAddress]);
+    const newGeneralFeesWallet: FeesWalletContract = await web3.deploy('FeesWallet', [contractRegistry.address, registryAdmin, config.orbsTokenAddress]) as any;
+    const newCertifiedFeesWallet: FeesWalletContract = await web3.deploy('FeesWallet', [contractRegistry.address, registryAdmin, config.orbsTokenAddress]) as any;
 
     console.log(`New generalFeesWallet contract: ${newGeneralFeesWallet.address}`);
     console.log(`New certifiedFeesWallet contract: ${newCertifiedFeesWallet.address}`);
 
     console.log('migrating reward buckets..');
-    await oldGeneralFeesWallet.migrateBucket(newGeneralFeesWallet.address, 1604448000);
-    await oldGeneralFeesWallet.migrateBucket(newGeneralFeesWallet.address, 1601856000);
+    for (const b of BUCKETS_TO_MIGRATE) {
+        await oldGeneralFeesWallet.migrateBucket(newGeneralFeesWallet.address, b);
+    }
 
     console.log('Setting in registry..');
     await contractRegistry.setContract('generalFeesWallet', newGeneralFeesWallet.address, true);

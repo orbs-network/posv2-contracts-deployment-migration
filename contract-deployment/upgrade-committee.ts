@@ -3,14 +3,14 @@ import {config} from "./config";
 
 const readline = require("readline-sync");
 
-const CONTRACT_REGISTRY_ADDR = "0x5454223e3078Db87e55a15bE541cc925f3702eB0";
+const CONTRACT_REGISTRY_ADDR = "0xD859701C81119aB12A1e62AF6270aD2AE05c7AB3";
 
-async function upgradeElections() {
+async function upgradeCommittee() {
     const web3 = new Web3Driver();
 
     const accounts = await web3.eth.getAccounts();
 
-    const registryAdmin = accounts[0];
+    const registryAdmin = config.registryAdminAddress;
 
     const contractRegistry = web3.getExisting('ContractRegistry', CONTRACT_REGISTRY_ADDR);
 
@@ -30,10 +30,10 @@ async function upgradeElections() {
     const committee = await web3.deploy('Committee', [contractRegistry.address, registryAdmin, config.maxCommitteeSize]);
 
     console.log("Migrating committee...");
-    await committee.importMembers(prevCommitteeAddr);
+    await committee.importMembers(prevCommitteeAddr, {from: accounts[0]});
 
     console.log("Setting committee in registry...");
-    await contractRegistry.setContract("committee", committee.address, true, {from: registryAdmin});
+    await contractRegistry.setContract("committee", committee.address, true);
 
     console.log(`committee: ${committee.address}`);
 
@@ -42,7 +42,7 @@ async function upgradeElections() {
     console.log("Done unlocking contracts");
 }
 
-upgradeElections().then(
+upgradeCommittee().then(
     () => {
         console.log('Done');
         process.exit(0);

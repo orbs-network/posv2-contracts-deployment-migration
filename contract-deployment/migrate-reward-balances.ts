@@ -125,26 +125,6 @@ export async function migrateRewardBalances(web3?: Web3Driver) {
     }
 
     console.log('Migration completed.');
-
-    console.log('Updating protocol wallets clients..')
-    const stakingRewardsWalletAddr = await contractRegistry.getContract('stakingRewardsWallet');
-    const bootstrapRewardsWalletAddr = await contractRegistry.getContract('bootstrapRewardsWallet');
-    const stakingRewardsAddr = await contractRegistry.getContract('stakingRewards');
-    const feesAndBootstrapRewardsAddr = await contractRegistry.getContract('feesAndBootstrapRewards');
-
-    console.log('stakingRewardsWalletAddr:', stakingRewardsWalletAddr);
-    console.log('bootstrapRewardsWalletAddr:', bootstrapRewardsWalletAddr);
-    console.log('stakingRewardsAddr', stakingRewardsAddr);
-    console.log('feesAndBootstrapRewardsAddr', feesAndBootstrapRewardsAddr);
-
-    if (readline.question('continue? [yes/no]') != 'yes') {
-        throw new Error("aborted by user");
-    }
-
-    const stakingRewardsWalletContract: ProtocolWalletContract = web3.getExisting("ProtocolWallet", stakingRewardsWalletAddr);
-    await stakingRewardsWalletContract.setClient(stakingRewardsAddr);
-    const bootstrapRewardsWalletContract: ProtocolWalletContract = web3.getExisting("ProtocolWallet", bootstrapRewardsWalletAddr);
-    await bootstrapRewardsWalletContract.setClient(feesAndBootstrapRewardsAddr);
 }
 
 migrateRewardBalances().then(

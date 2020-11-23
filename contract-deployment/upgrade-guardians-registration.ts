@@ -5,7 +5,8 @@ import {GuardiansRegistrationContract} from "@orbs-network/orbs-ethereum-contrac
 import {migrateGuardians} from "./migrate-guardians-lib";
 const readline = require("readline-sync");
 
-const CONTRACT_REGISTRY_ADDR = "0x5454223e3078Db87e55a15bE541cc925f3702eB0";
+const CONTRACT_REGISTRY_ADDR = "0xD859701C81119aB12A1e62AF6270aD2AE05c7AB3";
+const PREVIOUS_GUARDIAN_REGISTRATION_CONTRACT_ADDR = "0xce97f8c79228c53b8b9ad86800a493d1e7e5d1e3";
 
 async function upgradeGuardiansRegistration() {
     const web3 = new Web3Driver();
@@ -14,7 +15,7 @@ async function upgradeGuardiansRegistration() {
 
     const registryAdmin = accounts[0];
 
-    const contractRegistry: ContractRegistryContract = web3.getExisting('ContractRegistry', CONTRACT_REGISTRY_ADDR);
+    const contractRegistry: ContractRegistryContract = web3.getExisting('ContractRegistry', CONTRACT_REGISTRY_ADDR) as any;
 
     const oldGuardiansRegistrationAddr = await contractRegistry.getContract('guardiansRegistration');
     console.log('oldGuardiansRegistrationAddr:', oldGuardiansRegistrationAddr);
@@ -24,7 +25,7 @@ async function upgradeGuardiansRegistration() {
         throw new Error("aborted by user");
     }
 
-    const oldGuardiansRegistrationContract: GuardiansRegistrationContract = web3.getExisting('GuardiansRegistration', oldGuardiansRegistrationAddr);
+    const oldGuardiansRegistrationContract: GuardiansRegistrationContract = web3.getExisting('GuardiansRegistration', oldGuardiansRegistrationAddr) as any;
 
     console.log('Deploying new version..')
     const newGuardiansRegistrationContract = await web3.deploy('GuardiansRegistration', [contractRegistry.address, registryAdmin]);
@@ -34,7 +35,7 @@ async function upgradeGuardiansRegistration() {
     await oldGuardiansRegistrationContract.lock();
 
     console.log('Migrating guardians..');
-    await migrateGuardians(web3, newGuardiansRegistrationContract.address);
+    await migrateGuardians(web3, PREVIOUS_GUARDIAN_REGISTRATION_CONTRACT_ADDR, newGuardiansRegistrationContract.address);
 
     console.log("Setting guardians registration in registry...");
     await contractRegistry.setContract("guardiansRegistration", newGuardiansRegistrationContract.address, true);

@@ -10,34 +10,6 @@ import {DEPLOYMENT_SUBSET_CANARY, DEPLOYMENT_SUBSET_MAIN, ZERO_ADDR} from "./hel
 
 const readline = require("readline-sync");
 
-// const oldGuardianRegistrationABI = [{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"addr","type":"address"}],"name":"ContractRegistryAddressUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousFunctionalOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newFunctionalOwner","type":"address"}],"name":"FunctionalOwnershipTransferred","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"addr","type":"address"},{"indexed":false,"internalType":"bytes4","name":"ip","type":"bytes4"},{"indexed":false,"internalType":"address","name":"orbsAddr","type":"address"},{"indexed":false,"internalType":"string","name":"name","type":"string"},{"indexed":false,"internalType":"string","name":"website","type":"string"},{"indexed":false,"internalType":"string","name":"contact","type":"string"}],"name":"GuardianDataUpdated","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"addr","type":"address"},{"indexed":false,"internalType":"string","name":"key","type":"string"},{"indexed":false,"internalType":"string","name":"newValue","type":"string"},{"indexed":false,"internalType":"string","name":"oldValue","type":"string"}],"name":"GuardianMetadataChanged","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"addr","type":"address"}],"name":"GuardianRegistered","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"addr","type":"address"}],"name":"GuardianUnregistered","type":"event"},{"anonymous":false,"inputs":[],"name":"Locked","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousMigrationOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newMigrationOwner","type":"address"}],"name":"MigrationOwnershipTransferred","type":"event"},{"anonymous":false,"inputs":[],"name":"Unlocked","type":"event"},{"constant":false,"inputs":[],"name":"claimFunctionalOwnership","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"claimMigrationOwnership","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"functionalOwner","outputs":[{"internalType":"address","name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"getBootstrapRewardsWallet","outputs":[{"internalType":"contract IProtocolWallet","name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"getCertificationContract","outputs":[{"internalType":"contract ICertification","name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"getCommitteeContract","outputs":[{"internalType":"contract ICommittee","name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"getDelegationsContract","outputs":[{"internalType":"contract IDelegations","name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"getElectionsContract","outputs":[{"internalType":"contract IElections","name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"internalType":"address[]","name":"orbsAddrs","type":"address[]"}],"name":"getEthereumAddresses","outputs":[{"internalType":"address[]","name":"ethereumAddrs","type":"address[]"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"internalType":"address","name":"addr","type":"address"}],"name":"getGuardianData","outputs":[{"internalType":"bytes4","name":"ip","type":"bytes4"},{"internalType":"address","name":"orbsAddr","type":"address"},{"internalType":"string","name":"name","type":"string"},{"internalType":"string","name":"website","type":"string"},{"internalType":"string","name":"contact","type":"string"},{"internalType":"uint256","name":"registration_time","type":"uint256"},{"internalType":"uint256","name":"last_update_time","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"internalType":"address","name":"addr","type":"address"}],"name":"getGuardianIp","outputs":[{"internalType":"bytes4","name":"ip","type":"bytes4"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"internalType":"address[]","name":"addrs","type":"address[]"}],"name":"getGuardianIps","outputs":[{"internalType":"bytes4[]","name":"ips","type":"bytes4[]"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"internalType":"address[]","name":"addrs","type":"address[]"}],"name":"getGuardiansOrbsAddress","outputs":[{"internalType":"address[]","name":"orbsAddrs","type":"address[]"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"getGuardiansRegistrationContract","outputs":[{"internalType":"contract IGuardiansRegistration","name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"internalType":"address","name":"addr","type":"address"},{"internalType":"string","name":"key","type":"string"}],"name":"getMetadata","outputs":[{"internalType":"string","name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"internalType":"address[]","name":"ethereumAddrs","type":"address[]"}],"name":"getOrbsAddresses","outputs":[{"internalType":"address[]","name":"orbsAddrs","type":"address[]"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"getProtocolContract","outputs":[{"internalType":"contract IProtocol","name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"getRewardsContract","outputs":[{"internalType":"contract IRewards","name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"getStakingContract","outputs":[{"internalType":"contract IStakingContract","name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"getStakingRewardsWallet","outputs":[{"internalType":"contract IProtocolWallet","name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"getSubscriptionsContract","outputs":[{"internalType":"contract ISubscriptions","name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"internalType":"address","name":"","type":"address"},{"internalType":"string","name":"","type":"string"}],"name":"guardianMetadata","outputs":[{"internalType":"string","name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"guardians","outputs":[{"internalType":"address","name":"orbsAddr","type":"address"},{"internalType":"bytes4","name":"ip","type":"bytes4"},{"internalType":"string","name":"name","type":"string"},{"internalType":"string","name":"website","type":"string"},{"internalType":"string","name":"contact","type":"string"},{"internalType":"uint256","name":"registrationTime","type":"uint256"},{"internalType":"uint256","name":"lastUpdateTime","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"internalType":"bytes4","name":"","type":"bytes4"}],"name":"ipToGuardian","outputs":[{"internalType":"address","name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"isFunctionalOwner","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"isMigrationOwner","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"internalType":"address","name":"addr","type":"address"}],"name":"isRegistered","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[],"name":"lock","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"locked","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"migrationOwner","outputs":[{"internalType":"address","name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"orbsAddressToEthereumAddress","outputs":[{"internalType":"address","name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"internalType":"bytes4","name":"ip","type":"bytes4"},{"internalType":"address","name":"orbsAddr","type":"address"},{"internalType":"string","name":"name","type":"string"},{"internalType":"string","name":"website","type":"string"},{"internalType":"string","name":"contact","type":"string"}],"name":"registerGuardian","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"renounceFunctionalOwnership","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"renounceMigrationOwnership","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[{"internalType":"address","name":"ethereumOrOrbsAddress","type":"address"}],"name":"resolveGuardianAddress","outputs":[{"internalType":"address","name":"ethereumAddress","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"internalType":"contract IContractRegistry","name":"_contractRegistry","type":"address"}],"name":"setContractRegistry","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"string","name":"key","type":"string"},{"internalType":"string","name":"value","type":"string"}],"name":"setMetadata","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"newFunctionalOwner","type":"address"}],"name":"transferFunctionalOwnership","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"newMigrationOwner","type":"address"}],"name":"transferMigrationOwnership","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"unlock","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"unregisterGuardian","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"bytes4","name":"ip","type":"bytes4"},{"internalType":"address","name":"orbsAddr","type":"address"},{"internalType":"string","name":"name","type":"string"},{"internalType":"string","name":"website","type":"string"},{"internalType":"string","name":"contact","type":"string"}],"name":"updateGuardian","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"bytes4","name":"ip","type":"bytes4"}],"name":"updateGuardianIp","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"}]
-
-async function listGuardians(guardianRegistrationContractAddr: string): Promise<string[]> {
-    const web3 = new Web3(new Web3.providers.HttpProvider("https://mainnet.infura.io/v3/62f4815d28674debbe4703c5eb9d413c"))
-    const contract = new web3.eth.Contract(getAbiByContractAddress(guardianRegistrationContractAddr) as any, guardianRegistrationContractAddr);
-    const events = await contract.getPastEvents("GuardianDataUpdated", {
-        fromBlock: "earliest",
-        toBlock: "latest",
-    });
-    let guardians: string[] = []
-    for (const e of events) {
-        guardians = guardians.filter(addr => addr != e.returnValues.guardian)
-        if (e.returnValues.isRegistered) {
-            guardians.push(e.returnValues.guardian as string)
-        }
-    }
-
-    return guardians;
-}
-
-async function lockExistingContracts(web3: Web3Driver, contractsToLock: string[], migrationManager: string) {
-    for (const addr of contractsToLock) {
-        console.log('Locking contract:', addr);
-        const contract = web3.getExisting("Lockable" as any, addr);
-        await contract.lock({from: migrationManager});
-    }
-}
-
 async function deploy() {
     const web3 = new Web3Driver();
 
@@ -47,24 +19,7 @@ async function deploy() {
 
     const registryAdmin = config.registryAdminAddress;
 
-    const previousContractRegistry = web3.getExisting("ContractRegistry", config.previousContractRegistryAddr);
-    const previousGuardiansContractAddr = await previousContractRegistry.getContract("guardiansRegistration");
-    const previousCommitteeAddr = await previousContractRegistry.getContract("committee");
-
     console.log('registryAdmin:', registryAdmin);
-    console.log('previousGuardiansContractAddr:', previousGuardiansContractAddr);
-    console.log('previousCommitteeAddr:', previousCommitteeAddr);
-
-    // await lockExistingContracts(web3, config.existingContractsToLock, accounts[0])
-    // console.log("Done locking contracts");
-
-    console.log("listing guardians...");
-    const guardiansToMigrate = await listGuardians(previousGuardiansContractAddr);
-
-    console.log('The following guardians will be migrated:');
-    for (const guardian of guardiansToMigrate) {
-        console.log(guardian);
-    }
 
     const cont = readline.question('continue? [yes/no]');
     if (cont != 'yes') {
@@ -114,18 +69,6 @@ async function deploy() {
         contractRegistry.setContract("certifiedFeesWallet", certifiedFeesWallet.address, true),
         contractRegistry.setContract("stakingContractHandler", stakingContractHandler.address, true),
     ]);
-
-    // await contractRegistry.setManager("migrationManager", migrationManager);
-    // await contractRegistry.setManager("functionalManager", functionalManager);
-
-    await guardiansRegistration.migrateGuardians(guardiansToMigrate, previousGuardiansContractAddr);
-
-    // for (const wallet of [stakingRewardsWallet, bootstrapRewardsWallet]) {
-    //     await wallet.transferMigrationOwnership(migrationManager);
-    //     await wallet.claimMigrationOwnership({from: migrationManager});
-    //     await wallet.transferFunctionalOwnership(functionalManager);
-    //     await wallet.claimFunctionalOwnership({from: functionalManager});
-    // }
 
     await protocol.createDeploymentSubset(DEPLOYMENT_SUBSET_MAIN, 1);
     await protocol.createDeploymentSubset(DEPLOYMENT_SUBSET_CANARY, 1);

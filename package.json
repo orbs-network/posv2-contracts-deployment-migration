@@ -10,7 +10,10 @@
     "deploy-contracts": "cd contract-deployment && npm run deploy-contracts -- -o ../deployed-contracts.json",
     "migrate-delegations-local": "cd delegations-migration && npm run migrate-local",
     "migrate-delegations-mainnet": "cd delegations-migration && npm run migrate-mainnet",
-    "finalize-deployment": "cd contract-deployment && npm run finalize-deployment",
+    "migrate-delegations-diff-local": "cd delegations-migration && npm run migrate-diff-local",
+    "migrate-delegations-diff-mainnet": "cd delegations-migration && npm run migrate-diff-mainnet",
+    "activate-reward-distribution": "cd contract-deployment && npm run activate-reward-distribution",
+    "finalize-initialization": "cd contract-deployment && npm run finalize-initialization",
     "start-ganache": "ganache-cli -v -m \"$(cat .secret)\" -p 7545 --fork https://mainnet.infura.io/v3/48fb0d9baafd4e28aa34f95d75f6d4ce",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
