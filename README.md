@@ -75,14 +75,20 @@ The contracts' ABIs and source code are taken from the [@orbs-network/orbs-ether
 
 This repo contains several script for upgrading specific contracts. Some Orbs PoS v2 contracts are equipped with data migration mechanisms that allows a priviliged user (typically the initialization admin) to initialze the contract with existing state (such as a list of registered guardians, delegations, and so on). This repo contains helper scripts that perform such migrations.
 
+As for existing contracts, most migration priviliges are granted to the migrationManager (a role set in the contract registry). Since the registryAdmin (the contracts super user) is typically stored in a cold wallet, using it for migrations that require multiple transaction (e.g. a migration script) is not straight forward. Instead, the recommended flow is to assign the migratonManager role to a new, temporary address created for the specific migration, and revoke the permissions after the migration is complete.
+
+The current registryAdmin is 0xf1fD5233E60E7Ef797025FE9DD066d60d59BcB92.
+
 The typical upgrade flow is as follows:
 
+1. Prepare a new migrator account and set the migrationManager to that account, by calling `ContractRegistry.setManager("migrationManager", <account>)` from the registryAdmin address. 
 1. Deploy the new contract.
 2. Verify the contract in Etherscan. This ensures everyone has access to the contract ABI and source code (some clients may depend on it).
 3. Update `@orbs-network/orbs-ethereum-contracts-v2`'s `getAbiByContractAddress()` function so that it would return the contract ABI when given the contract address (see the following Pitfalls section).
-4. Lock the previous contract using the `Lockable` interface, to avoid state changes in the old contract during migration.
+4. Lock the previous contract using the `Lockable` interface, to avoid state changes in the old contract during migration. Locking can be done by the migrationMangaer.
 5. Perform any neccessary state migration from the previous contract (e.g. by using priviliges initialization function in the old and/or new contracts). In case of a large state, split over several transactions.
-6. Set the address of the new contract in the contract registry.
+6. Set the address of the new contract in the contract registry,  using `ContractRegistry.setContract`. The migrationManager is allowed to make this call.
+7. Revoke the migrationManager account, by calling `ContractRegistry.setManager("migrationManager", address(0))`. This also requires the registryAdmin account.
 7. Update the [list of deployed contracts](https://github.com/orbs-network/posv2-contracts-deployment-migration/blob/master/DEPLOYED_CONTRACTS.md).
 
 ### Pitfalls
