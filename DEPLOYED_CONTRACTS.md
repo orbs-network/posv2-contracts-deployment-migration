@@ -21,7 +21,7 @@
   <tr>
    <td>2
    </td>
-   <td>ERC20
+   <td>ORBS ERC20
    </td>
    <td><a href="https://etherscan.io/token/0xff56cc6b1e6ded347aa0b7676c85ab0b3d08b0fa">0xff56Cc6b1E6dEd347aA0B7676C85AB0B3D08B0FA</a>
    </td>
@@ -188,8 +188,11 @@ Notes:
 *   The up-to-date contract addresses may be queried using the contractsRegistry.getContract(Contract Name). For example: contractsRegistry.getContract(“stakingRewards”)
 *   The subscription plan is not part of the contractsRegistry and is managed by the subscriptions contract.
 
+---
 
-## Beta 2.5 Addresses
+&nbsp;
+
+## Beta 2.5 Addresses - Obsolete / Inactive
 
 
 <table>
