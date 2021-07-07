@@ -146,20 +146,6 @@ Running instructions:
     
 Similarly to the main contract deployment script, the contract configration is taken from `contract-deployment/config.ts`.
 
-## GuardiansRegistration contract upgrade script
-
-Executes the guardians-registration contract upgrade flow (no state migration):
-1. Deployes a new guardians-registration contract.
-2. Migrates registered guardians from the previous contract using the `migrateGuardians()` function.
-3. sets the new contract in the regsitry.
-
-Running instructions:
-1. Edit `contract-deployment/upgrade-guardian-registration.ts`. Modify `CONTRACT_REGISTRY_ADDR` and `PREVIOUS_GUARDIAN_REGISTRATION_CONTRACT_ADDR` to contain the corresponding addresses.
-2. Run the upgrade script:
-    `cd contract-deployment && npm run upgrade-guardians-registration`
-    
-Similarly to the main contract deployment script, the contract configration is taken from `contract-deployment/config.ts`.
-
 ## FeesWallet contract upgrade script
 
 Executes the upgrade flow for both fee wallet contracts (general fees and certified fees):
@@ -187,7 +173,7 @@ Executes the upgrade flow for both reward contracts (StakingRewards and FeesAndB
 5. Updates the client of the bootstrapRewardsWallet to the new feesAndBootstrapRewards contract.
 6. Sets the new contracts in the registry.
 
-**Note - migrating existing reward balances between the old and new contracts is done in a separate step after this upgrade flow** - see "Migrate rewrad balances".
+**Note - migrating existing reward balances between the old and new contracts is done in a separate step after this upgrade flow** - see "Migrating staking rewrad balances".
 
 Running instructions:
 1. Edit `contract-deployment/upgrade-guardian-registration.ts`. Modify `CONTRACT_REGISTRY_ADDR` and `OLD_STAKING_REWARDS_ABI`, `OLD_FEES_AND_BOOTSTRAP_REWARDS_ABI` to contain the contract registry address and ABIs of the currently deployed stakingRewrads and feesAndBootstrapRewards contracts.
@@ -196,7 +182,7 @@ Running instructions:
     
 Similarly to the main contract deployment script, the contract configration is taken from `contract-deployment/config.ts`.
 
-## Migrating reward balances
+## Migrating staking reward balances
 
 Migrates reward balances from old reward contracts to the currently deployed ones:
 1. Builds a list of all addresses with existing balances by checking the balance of any past guardians and delegators.
