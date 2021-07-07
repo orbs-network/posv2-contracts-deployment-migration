@@ -1,198 +1,4 @@
-## Tokens & Staking contracts
-
-
-<table>
-  <tr>
-   <td>#
-   </td>
-   <td>Contract
-   </td>
-   <td>Address
-   </td>
-  </tr>
-  <tr>
-   <td>1
-   </td>
-   <td>Staking contract
-   </td>
-   <td><a href="https://etherscan.io/address/0x01d59af68e2dcb44e04c50e05f62e7043f2656c3#readContract">0x01D59Af68E2dcb44e04C50e05F62E7043F2656C3</a>
-   </td>
-  </tr>
-  <tr>
-   <td>2
-   </td>
-   <td>ORBS ERC20
-   </td>
-   <td><a href="https://etherscan.io/token/0xff56cc6b1e6ded347aa0b7676c85ab0b3d08b0fa">0xff56Cc6b1E6dEd347aA0B7676C85AB0B3D08B0FA</a>
-   </td>
-  </tr>
-  <tr>
-   <td>3
-   </td>
-   <td>DAI
-   </td>
-   <td><a href="https://etherscan.io/token/0x6b175474e89094c44da98b954eedeac495271d0f">0x6b175474e89094c44da98b954eedeac495271d0f</a>
-   </td>
-  </tr>
-</table>
-
-
-
-## Final Revision - Nov 4
-
-
-<table>
-  <tr>
-   <td>#
-   </td>
-   <td>Contract Name
-   </td>
-   <td>Address
-   </td>
-  </tr>
-  <tr>
-   <td>1
-   </td>
-   <td>contractsRegistry
-   </td>
-   <td><a href="https://etherscan.io/address/0xD859701C81119aB12A1e62AF6270aD2AE05c7AB3">0xD859701C81119aB12A1e62AF6270aD2AE05c7AB3</a>
-   </td>
-  </tr>
-  <tr>
-   <td>2
-   </td>
-   <td>delegations
-   </td>
-   <td><a href="https://etherscan.io/address/0xB97178870F39d4389210086E4BcaccACD715c71d">0xB97178870F39d4389210086E4BcaccACD715c71d</a>
-   </td>
-  </tr>
-  <tr>
-   <td>3
-   </td>
-   <td>stakingContractHandler
-   </td>
-   <td><a href="https://etherscan.io/address/0x77A4e01C20d4a67372f300297fB69Da981c19755">0x77A4e01C20d4a67372f300297fB69Da981c19755</a>
-   </td>
-  </tr>
-  <tr>
-   <td>4
-   </td>
-   <td>stakingRewards
-   </td>
-   <td><a href="https://etherscan.io/address/0xB5303c22396333D9D27Dc45bDcC8E7Fc502b4B32">0xB5303c22396333D9D27Dc45bDcC8E7Fc502b4B32</a>
-   </td>
-  </tr>
-  <tr>
-   <td>5
-   </td>
-   <td>feesAndBootstrapRewards
-   </td>
-   <td><a href="https://etherscan.io/address/0xda7e381544Fc73cad7D9E63C86e561452b9B9E9C">0xda7e381544Fc73cad7D9E63C86e561452b9B9E9C</a>
-   </td>
-  </tr>
-  <tr>
-   <td>6
-   </td>
-   <td>elections
-   </td>
-   <td><a href="https://etherscan.io/address/0x02Ca9F2c5dD0635516241efD480091870277865b">0x02Ca9F2c5dD0635516241efD480091870277865b</a>
-   </td>
-  </tr>
-  <tr>
-   <td>7
-   </td>
-   <td>subscriptions
-   </td>
-   <td><a href="https://etherscan.io/address/0xD11EFC10cf3A54B12e3F04143070BE3865E7Bb8E">0xD11EFC10cf3A54B12e3F04143070BE3865E7Bb8E</a>
-   </td>
-  </tr>
-  <tr>
-   <td>8
-   </td>
-   <td>protocol
-   </td>
-   <td><a href="https://etherscan.io/address/0xeda03aDAbD68Da5B01326575712F01029d99703a">0xeda03aDAbD68Da5B01326575712F01029d99703a</a>
-   </td>
-  </tr>
-  <tr>
-   <td>9
-   </td>
-   <td>certification
-   </td>
-   <td><a href="https://etherscan.io/address/0x8d2a2a4dbdf9c9d9dff72abc96a2751b70ab3011">0x8d2a2a4dbdf9c9d9dff72abc96a2751b70ab3011</a>
-   </td>
-  </tr>
-  <tr>
-   <td>10
-   </td>
-   <td>committee
-   </td>
-   <td><a href="https://etherscan.io/address/0x1a4c7891d2d04b2cd413b98bc3283c8d992f5fa7">0x1a4c7891d2d04b2cd413b98bc3283c8d992f5fa7</a>
-   </td>
-  </tr>
-  <tr>
-   <td>11
-   </td>
-   <td>stakingRewardsWallet
-   </td>
-   <td><a href="https://etherscan.io/address/0xdBb374E965B21C5d6EE370dcB80176884Fa936f1">0xdBb374E965B21C5d6EE370dcB80176884Fa936f1</a>
-   </td>
-  </tr>
-  <tr>
-   <td>12
-   </td>
-   <td>bootstrapRewardsWallet
-   </td>
-   <td><a href="https://etherscan.io/address/0x60f99fe905c714a1eb1d50e7dfb91c9f956478e0">0x60f99fe905c714a1eb1d50e7dfb91c9f956478e0</a>
-   </td>
-  </tr>
-  <tr>
-   <td>13
-   </td>
-   <td>guardiansRegistration
-   </td>
-   <td><a href="https://etherscan.io/address/0xce97f8c79228c53b8b9ad86800a493d1e7e5d1e3">0xce97f8c79228c53b8b9ad86800a493d1e7e5d1e3</a>
-   </td>
-  </tr>
-  <tr>
-   <td>14
-   </td>
-   <td>generalFeesWallet
-   </td>
-   <td><a href="https://etherscan.io/address/0x1ef2ec57f23dcb4d3696ced6d70c60a8722ddf92">0x1ef2ec57f23dcb4d3696ced6d70c60a8722ddf92</a>
-   </td>
-  </tr>
-  <tr>
-   <td>15
-   </td>
-   <td>certifiedFeesWallet
-   </td>
-   <td><a href="https://etherscan.io/address/0xBfBe5BBd57A2D49f588E8dBf8d1380B7F5f6d9AE">0xBfBe5BBd57A2D49f588E8dBf8d1380B7F5f6d9AE</a>
-   </td>
-  </tr>
-  <tr>
-   <td>16
-   </td>
-   <td>Subscription plan*
-   </td>
-   <td><a href="https://etherscan.io/address/0xADAdC1f110f7D2f8645d3A4EAC62E7F053a33f1F">0xADAdC1f110f7D2f8645d3A4EAC62E7F053a33f1F</a>
-   </td>
-  </tr>
-</table>
-
-
-Notes:
-
-
-
-*   The up-to-date contract addresses may be queried using the contractsRegistry.getContract(Contract Name). For example: contractsRegistry.getContract(“stakingRewards”)
-*   The subscription plan is not part of the contractsRegistry and is managed by the subscriptions contract.
-
----
-
-&nbsp;
-
-## Beta 2.5 Addresses - Obsolete / Inactive
+## Beta 2.5 Addresses
 
 
 <table>
@@ -391,7 +197,8 @@ Notes:
 </table>
 
 
-## Guardian Migration (V1 -> V2.5 Migration)
+## Beta 1.0 Addresses - Obsolete / Inactive
+
 
 <table>
   <tr>
@@ -405,16 +212,98 @@ Notes:
   <tr>
    <td>1
    </td>
-   <td>GuardiansMigrationV1V2
+   <td>ContractsRegistry
    </td>
-   <td><a href="https://etherscan.io/address/0xd2abc20b2a7bfdf4c7e126a669d2c43293845c7d">0xd2ABc20B2A7bFdf4C7E126a669D2C43293845c7D</a>
+   <td><a href="https://etherscan.io/address/0x10bFdCc77E998Eb849a18c79b880F8b9BE06Ad83">0x10bFdCc77E998Eb849a18c79b880F8b9BE06Ad83</a>
+   </td>
+  </tr>
+  <tr>
+   <td>2
+   </td>
+   <td>Delegations
+   </td>
+   <td><a href="https://etherscan.io/address/0xBb5B5E9333e155cad6fe299B18dED3F4107EF294">0xBb5B5E9333e155cad6fe299B18dED3F4107EF294</a>
+   </td>
+  </tr>
+  <tr>
+   <td>3
+   </td>
+   <td>Rewards
+   </td>
+   <td><a href="https://etherscan.io/address/0x16De66Ca1135a997f17679c0CdF09d49223F5B20">0x16De66Ca1135a997f17679c0CdF09d49223F5B20</a>
+   </td>
+  </tr>
+  <tr>
+   <td>4
+   </td>
+   <td>Elections
+   </td>
+   <td><a href="https://etherscan.io/address/0xda393f62303ce1396d6f425cd7e85b60dac8233e">0xda393f62303ce1396d6f425cd7e85b60dac8233e</a>
+   </td>
+  </tr>
+  <tr>
+   <td>5
+   </td>
+   <td>Subscription
+   </td>
+   <td><a href="https://etherscan.io/address/0x3b2c72d0d5fc8a7346091f449487cd0a7f0954d6">0x3b2c72d0d5fc8a7346091f449487cd0a7f0954d6</a>
+   </td>
+  </tr>
+  <tr>
+   <td>6
+   </td>
+   <td>Protocol
+   </td>
+   <td><a href="https://etherscan.io/address/0xf6cc041e1bb8c1431d419bb88424324af5dd7866">0xf6cc041e1bb8c1431d419bb88424324af5dd7866</a>
+   </td>
+  </tr>
+  <tr>
+   <td>7
+   </td>
+   <td>Certification
+   </td>
+   <td><a href="https://etherscan.io/address/0x47c4ae9cefb30afba85da9c2fcd3125480770d9b">0x47c4ae9cefb30afba85da9c2fcd3125480770d9b</a>
+   </td>
+  </tr>
+  <tr>
+   <td>8
+   </td>
+   <td>Committee
+   </td>
+   <td><a href="https://etherscan.io/address/0xbfb2bac25daaabf79e5c94a8036b28c553ee75f5">0xbfb2bac25daaabf79e5c94a8036b28c553ee75f5</a>
+   </td>
+  </tr>
+  <tr>
+   <td>9
+   </td>
+   <td>StakingRewardsWallet
+   </td>
+   <td><a href="https://etherscan.io/address/0x7381179c5fdf9d509a9749e684fa58604e670f11">0x7381179c5fdf9d509a9749e684fa58604e670f11</a>
+   </td>
+  </tr>
+  <tr>
+   <td>10
+   </td>
+   <td>BootstrapRewardsWallet
+   </td>
+   <td><a href="https://etherscan.io/address/0xe4893f34d3f1cb45bff426624a2dc938d132cd7b">0xe4893f34d3f1cb45bff426624a2dc938d132cd7b</a>
+   </td>
+  </tr>
+  <tr>
+   <td>11
+   </td>
+   <td>GuardiansRegistration
+   </td>
+   <td><a href="https://etherscan.io/address/0xd095e7310616376bded74afc7e0400e6d0894e6f">0xd095e7310616376bded74afc7e0400e6d0894e6f</a>
+   </td>
+  </tr>
+  <tr>
+   <td>12
+   </td>
+   <td>Subscription plan
+   </td>
+   <td><a href="https://etherscan.io/address/0xb2e3e952ba99a3eab76eddf85a2d387e3d9d335b">0xb2e3e952ba99a3eab76eddf85a2d387e3d9d335b</a>
    </td>
   </tr>
 </table>
 
-
-
-
-&nbsp;
-
-#### [Beta contracts addresses (obsolete)](./BETA_CONTRACTS.md)
