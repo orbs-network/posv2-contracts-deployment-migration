@@ -8,6 +8,7 @@
     "build-contract-deployment": "cd contract-deployment && npm install",
     "build": "npm run build-delegations-migration && npm run build-contract-deployment",
     "deploy-contracts": "cd contract-deployment && npm run deploy-contracts -- -o ../deployed-contracts.json",
+    "deploy-staking-contract": "cd contract-deployment && npm run deploy-staking-contract",
     "migrate-delegations-local": "cd delegations-migration && npm run migrate-local",
     "migrate-delegations-mainnet": "cd delegations-migration && npm run migrate-mainnet",
     "migrate-delegations-diff-local": "cd delegations-migration && npm run migrate-diff-local",

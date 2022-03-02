@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "deploy-contracts": "export ETHEREUM_MNEMONIC=\"$(cat ../.secret)\" && node --require ts-node/register ./deploy-contracts.ts",
+    "deploy-staking-contract": "export ETHEREUM_MNEMONIC=\"$(cat ../.secret)\" && node --require ts-node/register ./deploy-staking-contract.ts",
     "activate-reward-distribution": "export ETHEREUM_MNEMONIC=\"$(cat ../.secret)\" && node --require ts-node/register activate-reward-distribution.ts",
     "finalize-initialization": "export ETHEREUM_MNEMONIC=\"$(cat ../.secret)\" && node --require ts-node/register finalize-initialization.ts",
     "refresh-stakes": "export ETHEREUM_MNEMONIC=\"$(cat ../.secret)\" && node --require ts-node/register ./refresh-stakes.ts",
@@ -15,7 +16,8 @@
     "upgrade-rewards": "export ETHEREUM_MNEMONIC=\"$(cat ../.secret)\" && node --require ts-node/register ./upgrade-rewards.ts",
     "migrate-reward-balances": "export ETHEREUM_MNEMONIC=\"$(cat ../.secret)\" && node --require ts-node/register ./migrate-reward-balances.ts",
     "migrate-guardians": "export ETHEREUM_MNEMONIC=\"$(cat ../.secret)\" && node --require ts-node/register ./migrate-guardians.ts",
-    "upgrade-guardians-registration": "export ETHEREUM_MNEMONIC=\"$(cat ../.secret)\" && node --require ts-node/register ./upgrade-guardians-registration.ts"
+    "upgrade-guardians-registration": "export ETHEREUM_MNEMONIC=\"$(cat ../.secret)\" && node --require ts-node/register ./upgrade-guardians-registration.ts",
+    "register-guardians": "export ETHEREUM_MNEMONIC=\"$(cat ../.secret)\" && node --require ts-node/register ./register-guardians.ts"
   },
   "author": "",
   "license": "ISC",
