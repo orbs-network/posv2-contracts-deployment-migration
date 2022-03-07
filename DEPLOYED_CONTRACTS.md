@@ -1,5 +1,8 @@
+# Orbs Official Contract Addresses
+
 ## Tokens & Staking contracts
 
+### Ethereum
 
 <table>
   <tr>
@@ -36,9 +39,42 @@
   </tr>
 </table>
 
+### Polygon
+
+<table>
+  <tr>
+   <td>#
+   </td>
+   <td>Contract
+   </td>
+   <td>Address
+   </td>
+  </tr>
+  <tr>
+   <td>1
+   </td>
+   <td>Staking contract
+   </td>
+   <td><a href=""></a></td>
+  </tr>
+  <tr>
+   <td>2
+   </td>
+   <td>ORBS ERC20
+   </td>
+   <td><a href=""></a></td>
+  </tr>
+  <tr>
+   <td>3
+   </td>
+   <td>DAI
+   </td>
+   <td><a href=""></a></td>
+  </tr>
+</table>
 
 
-## Final Revision - Nov 4
+## Ethereum Final Revision - Nov 4, 2020
 
 
 <table>
@@ -188,9 +224,138 @@ Notes:
 *   The up-to-date contract addresses may be queried using the contractsRegistry.getContract(Contract Name). For example: contractsRegistry.getContract(“stakingRewards”)
 *   The subscription plan is not part of the contractsRegistry and is managed by the subscriptions contract.
 
----
+## Polygon Final Revision - ??? ??, 2022
+
+
+<table>
+  <tr>
+   <td>#
+   </td>
+   <td>Contract Name
+   </td>
+   <td>Address
+   </td>
+  </tr>
+  <tr>
+   <td>1
+   </td>
+   <td>contractsRegistry
+   </td>
+   <td><a href=""></a></td>
+  </tr>
+  <tr>
+   <td>2
+   </td>
+   <td>delegations
+   </td>
+   <td><a href=""></a></td>
+  </tr>
+  <tr>
+   <td>3
+   </td>
+   <td>stakingContractHandler
+   </td>
+   <td><a href=""></a></td>
+  </tr>
+  <tr>
+   <td>4
+   </td>
+   <td>stakingRewards
+   </td>
+   <td><a href=""></a></td>
+  </tr>
+  <tr>
+   <td>5
+   </td>
+   <td>feesAndBootstrapRewards
+   </td>
+   <td><a href=""></a></td>
+  </tr>
+  <tr>
+   <td>6
+   </td>
+   <td>elections
+   </td>
+   <td><a href=""></a></td>
+  </tr>
+  <tr>
+   <td>7
+   </td>
+   <td>subscriptions
+   </td>
+   <td><a href=""></a></td>
+  </tr>
+  <tr>
+   <td>8
+   </td>
+   <td>protocol
+   </td>
+   <td><a href=""></a></td>
+  </tr>
+  <tr>
+   <td>9
+   </td>
+   <td>certification
+   </td>
+   <td><a href=""></a></td>
+  </tr>
+  <tr>
+   <td>10
+   </td>
+   <td>committee
+   </td>
+   <td><a href=""></a></td>
+  </tr>
+  <tr>
+   <td>11
+   </td>
+   <td>stakingRewardsWallet
+   </td>
+   <td><a href=""></a></td>
+  </tr>
+  <tr>
+   <td>12
+   </td>
+   <td>bootstrapRewardsWallet
+   </td>
+   <td><a href=""></a></td>
+  </tr>
+  <tr>
+   <td>13
+   </td>
+   <td>guardiansRegistration
+   </td>
+   <td><a href=""></a></td>
+  </tr>
+  <tr>
+   <td>14
+   </td>
+   <td>generalFeesWallet
+   </td>
+   <td><a href=""></a></td>
+  </tr>
+  <tr>
+   <td>15
+   </td>
+   <td>certifiedFeesWallet
+   </td>
+   <td><a href=""></a></td>
+  </tr>
+  <tr>
+   <td>16
+   </td>
+   <td>Subscription plan*
+   </td>
+   <td><a href=""></a></td>
+  </tr>
+</table>
+
 
 &nbsp;
+
+# Historic Addresses
+
+The addresses below are obsolete and no longer in use 
 
 ## Beta 2.5 Addresses - Obsolete / Inactive
 
