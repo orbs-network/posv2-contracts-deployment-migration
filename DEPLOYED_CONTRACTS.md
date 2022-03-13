@@ -224,7 +224,7 @@ Notes:
 *   The up-to-date contract addresses may be queried using the contractsRegistry.getContract(Contract Name). For example: contractsRegistry.getContract(“stakingRewards”)
 *   The subscription plan is not part of the contractsRegistry and is managed by the subscriptions contract.
 
-## Polygon Final Revision - ??? ??, 2022
+## Polygon Final Revision - March 2, 2022
 
 
 <table>
