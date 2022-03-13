@@ -255,98 +255,98 @@ Notes:
    </td>
    <td>stakingContractHandler
    </td>
-   <td><a href=""></a></td>
+   <td><a href="https://polygonscan.com/address/0x1B434Caa2604e719d93b4f661Db666ba250d11bb">0x1B434Caa2604e719d93b4f661Db666ba250d11bb</a></td>
   </tr>
   <tr>
    <td>4
    </td>
    <td>stakingRewards
    </td>
-   <td><a href=""></a></td>
+   <td><a href="https://polygonscan.com/address/0x295d1982b1b20Cc0c02A0Da7285826c69EF71Fac">0x295d1982b1b20Cc0c02A0Da7285826c69EF71Fac</a></td>
   </tr>
   <tr>
    <td>5
    </td>
    <td>feesAndBootstrapRewards
    </td>
-   <td><a href=""></a></td>
+   <td><a href="https://polygonscan.com/address/0x932ba5478cb06d61A6FB12E067bb4c606cAb3b06">0x932ba5478cb06d61A6FB12E067bb4c606cAb3b06</a></td>
   </tr>
   <tr>
    <td>6
    </td>
    <td>elections
    </td>
-   <td><a href=""></a></td>
+   <td><a href="https://polygonscan.com/address/0x94f2da1ef22649c642500e8B1C3252A4670eE95b">0x94f2da1ef22649c642500e8B1C3252A4670eE95b</a></td>
   </tr>
   <tr>
    <td>7
    </td>
    <td>subscriptions
    </td>
-   <td><a href=""></a></td>
+   <td><a href="https://polygonscan.com/address/0xe7A0F52624dC6f324462FddfEA476A20ec149EA6">0xe7A0F52624dC6f324462FddfEA476A20ec149EA6</a></td>
   </tr>
   <tr>
    <td>8
    </td>
    <td>protocol
    </td>
-   <td><a href=""></a></td>
+   <td><a href="https://polygonscan.com/address/0x617dAD8Bb34d52fc2786d23136b3aB893398a14e">0x617dAD8Bb34d52fc2786d23136b3aB893398a14e</a></td>
   </tr>
   <tr>
    <td>9
    </td>
    <td>certification
    </td>
-   <td><a href=""></a></td>
+   <td><a href="https://polygonscan.com/address/0xe46c15813A4252CAd1aA77259647dA16E4A3E067">0xe46c15813A4252CAd1aA77259647dA16E4A3E067</a></td>
   </tr>
   <tr>
    <td>10
    </td>
    <td>committee
    </td>
-   <td><a href=""></a></td>
+   <td><a href="https://polygonscan.com/address/0x33Ce52A7B67CF55781bD3D99E4e234DB270dF5e4">0x33Ce52A7B67CF55781bD3D99E4e234DB270dF5e4</a></td>
   </tr>
   <tr>
    <td>11
    </td>
    <td>stakingRewardsWallet
    </td>
-   <td><a href=""></a></td>
+   <td><a href="https://polygonscan.com/address/0xCaF1810F6bb2Cd50f9A3C22A77e3c628CD282634">0xCaF1810F6bb2Cd50f9A3C22A77e3c628CD282634</a></td>
   </tr>
   <tr>
    <td>12
    </td>
    <td>bootstrapRewardsWallet
    </td>
-   <td><a href=""></a></td>
+   <td><a href="https://polygonscan.com/address/0x98e3c6546a6496cF195A1dDa5e240C24129B6302">0x98e3c6546a6496cF195A1dDa5e240C24129B6302</a></td>
   </tr>
   <tr>
    <td>13
    </td>
    <td>guardiansRegistration
    </td>
-   <td><a href=""></a></td>
+   <td><a href="https://polygonscan.com/address/0x49E77b78275D6c69c807727870682DbC725E4dc9">0x49E77b78275D6c69c807727870682DbC725E4dc9</a></td>
   </tr>
   <tr>
    <td>14
    </td>
    <td>generalFeesWallet
    </td>
-   <td><a href=""></a></td>
+   <td><a href="https://polygonscan.com/address/0x74aeE9EdC37bD8D365a85c0A9C84F1C21F7B8C7A">0x74aeE9EdC37bD8D365a85c0A9C84F1C21F7B8C7A</a></td>
   </tr>
   <tr>
    <td>15
    </td>
    <td>certifiedFeesWallet
    </td>
-   <td><a href=""></a></td>
+   <td><a href="https://polygonscan.com/address/0x21E3F384217bF353701349858dF00C9dE35afF0d">0x21E3F384217bF353701349858dF00C9dE35afF0d</a></td>
   </tr>
   <tr>
    <td>16
    </td>
    <td>Subscription plan*
    </td>
-   <td><a href=""></a></td>
+   <td><a href="https://polygonscan.com/address/0xe7A0F52624dC6f324462FddfEA476A20ec149EA6">0xe7A0F52624dC6f324462FddfEA476A20ec149EA6</a></td>
   </tr>
 </table>
 
