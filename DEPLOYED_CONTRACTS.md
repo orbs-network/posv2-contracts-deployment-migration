@@ -55,21 +55,21 @@
    </td>
    <td>Staking contract
    </td>
-   <td><a href=""></a></td>
+   <td><a href="https://polygonscan.com/address/0xeeae6791f684117b7028b48cb5dd21186df80b9c">0xeeae6791f684117b7028b48cb5dd21186df80b9c</a></td>
   </tr>
   <tr>
    <td>2
    </td>
    <td>ORBS ERC20
    </td>
-   <td><a href=""></a></td>
+   <td><a href="https://polygonscan.com/address/0x614389eaae0a6821dc49062d56bda3d9d45fa2ff">0x614389eaae0a6821dc49062d56bda3d9d45fa2ff</a></td>
   </tr>
   <tr>
    <td>3
    </td>
    <td>DAI
    </td>
-   <td><a href=""></a></td>
+   <td><a href="https://polygonscan.com/address/0x8f3cf7ad23cd3cadbd9735aff958023239c6a063">0x8f3cf7ad23cd3cadbd9735aff958023239c6a063</a></td>
   </tr>
 </table>
 
@@ -241,14 +241,14 @@ Notes:
    </td>
    <td>contractsRegistry
    </td>
-   <td><a href=""></a></td>
+   <td><a href="https://polygonscan.com/address/0x35eA0D75b2a3aB06393749B4651DfAD1Ffd49A77">0x35eA0D75b2a3aB06393749B4651DfAD1Ffd49A77</a></td>
   </tr>
   <tr>
    <td>2
    </td>
    <td>delegations
    </td>
-   <td><a href=""></a></td>
+   <td><a href="https://polygonscan.com/address/0x513d30e66641cB1f2670b5994DD8E2B61ED3C23c">0x513d30e66641cB1f2670b5994DD8E2B61ED3C23c</a></td>
   </tr>
   <tr>
    <td>3
