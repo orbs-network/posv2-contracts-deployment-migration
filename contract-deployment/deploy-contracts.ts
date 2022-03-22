@@ -130,5 +130,4 @@ deploy().then(
    (e) => {
         console.error(e);
         process.exit(1);
-    }
-).finally(() => console.log('finally'));
+    });
