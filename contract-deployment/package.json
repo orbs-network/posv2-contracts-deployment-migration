@@ -16,8 +16,7 @@
     "upgrade-rewards": "export ETHEREUM_MNEMONIC=\"$(cat ../.secret)\" && node --require ts-node/register ./upgrade-rewards.ts",
     "migrate-reward-balances": "export ETHEREUM_MNEMONIC=\"$(cat ../.secret)\" && node --require ts-node/register ./migrate-reward-balances.ts",
     "migrate-guardians": "export ETHEREUM_MNEMONIC=\"$(cat ../.secret)\" && node --require ts-node/register ./migrate-guardians.ts",
-    "upgrade-guardians-registration": "export ETHEREUM_MNEMONIC=\"$(cat ../.secret)\" && node --require ts-node/register ./upgrade-guardians-registration.ts",
-    "register-guardians": "export ETHEREUM_MNEMONIC=\"$(cat ../.secret)\" && node --require ts-node/register ./register-guardians.ts"
+    "upgrade-guardians-registration": "export ETHEREUM_MNEMONIC=\"$(cat ../.secret)\" && node --require ts-node/register ./upgrade-guardians-registration.ts"
   },
   "author": "",
   "license": "ISC",
