@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "deploy-contracts": "export ETHEREUM_MNEMONIC=\"$(cat ../.secret)\" && node --require ts-node/register ./deploy-contracts.ts",
+    "deploy-staking-contract": "export ETHEREUM_MNEMONIC=\"$(cat ../.secret)\" && node --require ts-node/register ./deploy-staking-contract.ts",
     "activate-reward-distribution": "export ETHEREUM_MNEMONIC=\"$(cat ../.secret)\" && node --require ts-node/register activate-reward-distribution.ts",
     "finalize-initialization": "export ETHEREUM_MNEMONIC=\"$(cat ../.secret)\" && node --require ts-node/register finalize-initialization.ts",
     "refresh-stakes": "export ETHEREUM_MNEMONIC=\"$(cat ../.secret)\" && node --require ts-node/register ./refresh-stakes.ts",

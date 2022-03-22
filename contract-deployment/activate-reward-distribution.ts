@@ -3,11 +3,14 @@ import * as fs from "fs";
 
 const contractRegistryAddress = JSON.parse(fs.readFileSync('../deployed-contracts.json').toString()).contractRegistry;
 
+import {chainId} from "./config";
+
 async function activateRewardDistribution() {
     console.log('ContractRegistry address:' + contractRegistryAddress);
     // console.log('Previous committee contract address:' + config.previousCommitteeContractAddress);
 
     const web3 = new Web3Driver();
+
     const accounts = await web3.eth.getAccounts();
 
     const initManager = accounts[0];
@@ -30,8 +33,8 @@ async function activateRewardDistribution() {
     // await electionsContract.initReadyForCommittee(committee, {from: initManager});
     // await committeeContract.emitCommitteeSnapshot();
 
-    await feesAndBootstrapRewardsContract.activateRewardDistribution(await web3.now(), {from: initManager});
-    await stakingRewardsContract.activateRewardDistribution(await web3.now(), {from: initManager});
+    await feesAndBootstrapRewardsContract.activateRewardDistribution(await web3.now(), {from: initManager, chainId: chainId});
+    await stakingRewardsContract.activateRewardDistribution(await web3.now(), {from: initManager, chainId: chainId});
 }
 
 activateRewardDistribution().then(
