@@ -3,17 +3,13 @@ import * as fs from "fs";
 
 const contractRegistryAddress = JSON.parse(fs.readFileSync('../deployed-contracts.json').toString()).contractRegistry;
 
+import {chainId} from "./config";
+
 async function activateRewardDistribution() {
     console.log('ContractRegistry address:' + contractRegistryAddress);
     // console.log('Previous committee contract address:' + config.previousCommitteeContractAddress);
 
     const web3 = new Web3Driver();
-	// web3.eth.defaultCommon = {customChain: {name: 'Polygon', chainId: 137, networkId: 137}, baseChain: "mainnet"};
-	// web3.eth.defaultChain = "mainnet"
-    // console.log(web3.eth.defaultCommon, web3.eth.defaultChain, web3.eth.currentProvider)
-    // console.log(web3.currentProvider)
-
-    // process.exit()
 
     const accounts = await web3.eth.getAccounts();
 
@@ -37,8 +33,8 @@ async function activateRewardDistribution() {
     // await electionsContract.initReadyForCommittee(committee, {from: initManager});
     // await committeeContract.emitCommitteeSnapshot();
 
-    await feesAndBootstrapRewardsContract.activateRewardDistribution(await web3.now(), {from: initManager, chainId: 137});
-    await stakingRewardsContract.activateRewardDistribution(await web3.now(), {from: initManager, chainId: 137});
+    await feesAndBootstrapRewardsContract.activateRewardDistribution(await web3.now(), {from: initManager, chainId: chainId});
+    await stakingRewardsContract.activateRewardDistribution(await web3.now(), {from: initManager, chainId: chainId});
 }
 
 activateRewardDistribution().then(

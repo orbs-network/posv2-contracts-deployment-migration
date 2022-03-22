@@ -33,7 +33,7 @@ export const config = {
 
     orbsTokenAddress: "0x614389EaAE0A6821DC49062D56BDA3d9d45Fa2ff",
     bootstrapTokenAddress: "0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063",
-    stakingContractAddress: "0xEeAE6791F684117B7028b48Cb5dD21186dF80B9c",
+    stakingContractAddress: "0x",
 
     minimumInitialVcPayment: new BigNumber('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'), // 2 ** 256-1 // tokens(21_000).mul(bn(6)), // 6 times the rate
 
@@ -43,3 +43,5 @@ export const config = {
     cooldownPeriodInSec: 1209600,
 
 };
+
+export const chainId = parseInt(process.env.CHAN_ID || '1')
