@@ -77,6 +77,18 @@ The contracts' ABIs and source code are taken from the [@orbs-network/orbs-ether
 
 8. Connect the staking contract to the staking contract handler (see setStakeChangeNotifier in the [StakingContract](https://github.com/orbs-network/orbs-staking-contract/blob/master/contracts/StakingContract.sol)).
    Note - in the time frame between delegation migration there may have been staking notifications that the new contract have missed. See [Fixing discrepenceis between the StakingContract and DelegationsContract](#fixing-discrepenceis-between-the-stakingcontract-and-delegationscontract) on how to close these gaps.
+      
+# Etherscan verification
+
+In order to verify contracts on Etherscan you can use the script std-json-input.js which converts truffle output to a json input format used by Etherscan for contracts verification.
+
+To verify for exmaple the ContractRegistry, you need to do the following actions:
+- Generate Standard-Json-Input file by running: `node std-json-input.js node_modules/@orbs-network/orbs-ethereum-contracts-v2/contracts node_modules/@orbs-network/orbs-ethereum-contracts-v2/build/contracts/ContractRegistry.json` 
+- Go to Etherscan, choose contract verification and choose Solidity (Standard-Json-Input)
+- Select the liscense type (MIT) 
+- Uploaded the generated json file in first step
+- Go to contract creation tx hash and extract the constructor parameters. You can do it by clicking `Click to see More` in the Transaction Details page and from Input Data field. Contract registry for example has 2 addresses in the constructor.
+- Press Upload  
 
 # Upgrading contracts
 
